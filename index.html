@@ -310,9 +310,129 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .sync-dot.ok{background:#00cc7a;}
 .sync-dot.err{background:#ff4444;}
 @keyframes pulse-sync{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* ─── LOGIN ──────────────────────────────────────────── */
+.login-overlay{position:fixed;inset:0;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;z-index:99999;
+  background-image:radial-gradient(ellipse at 20% 20%,rgba(0,204,122,.06) 0%,transparent 50%),
+  radial-gradient(ellipse at 80% 80%,rgba(0,153,187,.06) 0%,transparent 50%);}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:32px 28px;width:100%;max-width:360px;box-shadow:0 8px 40px rgba(0,0,0,.4);}
+.login-logo{text-align:center;margin-bottom:20px;}
+.login-logo .logo{display:inline-block;margin-bottom:8px;}
+.login-title{font-size:20px;font-weight:700;color:#fff;text-align:center;}
+.login-title span{color:var(--accent);}
+.login-sub{font-size:12px;color:var(--muted);text-align:center;margin-bottom:24px;}
+.login-field{margin-bottom:14px;}
+.login-field label{display:block;font-size:12px;color:#6a9a7a;margin-bottom:5px;}
+.login-input{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;
+  font-family:'Sarabun',sans-serif;}
+.login-input:focus{border-color:var(--accent);}
+.login-btn{width:100%;padding:12px;background:linear-gradient(135deg,#005533,#00cc7a);
+  color:#000;font-weight:700;font-size:15px;border:none;border-radius:8px;cursor:pointer;
+  margin-top:6px;font-family:'Sarabun',sans-serif;transition:opacity .2s;}
+.login-btn:hover{opacity:.9;}
+.login-err{color:#ff4444;font-size:12px;text-align:center;margin-top:10px;min-height:18px;}
+.login-footer{font-size:11px;color:var(--muted);text-align:center;margin-top:16px;}
+/* Admin Panel */
+.admin-panel{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;
+  display:none;align-items:center;justify-content:center;padding:16px;}
+.admin-panel.show{display:flex;}
+.admin-box{background:var(--card);border:1px solid var(--border2);border-radius:14px;
+  width:100%;max-width:600px;max-height:88vh;overflow-y:auto;}
+.admin-head{display:flex;align-items:center;padding:14px 18px;
+  border-bottom:1px solid rgba(255,255,255,.08);}
+.admin-title{font-size:15px;font-weight:700;color:#ffd700;flex:1;}
+.admin-close{background:none;border:none;color:#888;font-size:20px;cursor:pointer;}
+.admin-body{padding:16px 18px;}
+.user-table{width:100%;border-collapse:collapse;font-size:13px;}
+.user-table th{text-align:left;padding:8px 10px;color:#6a9a7a;font-weight:600;
+  border-bottom:1px solid rgba(255,255,255,.08);}
+.user-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.05);}
+.role-badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;}
+.role-badge.admin{background:rgba(255,215,0,.15);color:#ffd700;}
+.role-badge.user{background:rgba(0,204,122,.12);color:#00cc7a;}
+.btn-del-user{background:rgba(255,50,50,.1);border:1px solid rgba(255,50,50,.3);
+  color:#ff6666;border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer;}
+.btn-del-user:hover{background:rgba(255,50,50,.2);}
+.add-user-form{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+.add-user-input{flex:1;min-width:100px;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);border-radius:7px;padding:7px 10px;
+  color:var(--text);font-size:13px;outline:none;font-family:'Sarabun',sans-serif;}
+.add-user-input:focus{border-color:#00cc7a;}
+.btn-add-user{padding:7px 14px;background:rgba(0,204,122,.15);border:1px solid rgba(0,204,122,.4);
+  color:#00cc7a;border-radius:7px;font-size:13px;cursor:pointer;font-family:'Sarabun',sans-serif;}
+.btn-add-user:hover{background:rgba(0,204,122,.25);}
+/* User badge in header */
+.user-badge{display:flex;align-items:center;gap:6px;padding:4px 10px;
+  background:rgba(255,255,255,.06);border-radius:20px;font-size:12px;cursor:pointer;}
+.user-badge:hover{background:rgba(255,255,255,.1);}
+.user-badge .ub-name{color:var(--text);}
+.user-badge .ub-role{color:#ffd700;font-size:10px;}
+.btn-logout{padding:4px 10px;background:rgba(255,50,50,.1);border:1px solid rgba(255,50,50,.3);
+  color:#ff6666;border-radius:6px;font-size:11px;cursor:pointer;}
+.btn-logout:hover{background:rgba(255,50,50,.2);}
 </style>
 </head>
 <body>
+
+<!-- ══════════ LOGIN OVERLAY ══════════ -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="logo">EAF MONITOR</div>
+    </div>
+    <div class="login-title">Exhaust Air Fan <span>Dashboard</span></div>
+    <div class="login-sub">กรุณาเข้าสู่ระบบเพื่อดำเนินการต่อ</div>
+    <div class="login-field">
+      <label>ชื่อผู้ใช้ (Username)</label>
+      <input class="login-input" id="loginUser" type="text" placeholder="กรอกชื่อผู้ใช้"
+        onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-field">
+      <label>รหัสผ่าน (Password)</label>
+      <input class="login-input" id="loginPass" type="password" placeholder="กรอกรหัสผ่าน"
+        onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">🔐 เข้าสู่ระบบ</button>
+    <div class="login-err" id="loginErr"></div>
+    <div class="login-footer">EAF Monitoring System · โรงพยาบาลจุฬาลงกรณ์</div>
+  </div>
+</div>
+
+<!-- ══════════ ADMIN PANEL ══════════ -->
+<div class="admin-panel" id="adminPanel">
+  <div class="admin-box">
+    <div class="admin-head">
+      <span style="font-size:18px;">⚙️</span>
+      <span class="admin-title">Admin Panel — จัดการผู้ใช้</span>
+      <button class="admin-close" onclick="closeAdminPanel()">✕</button>
+    </div>
+    <div class="admin-body">
+      <table class="user-table" id="userTable">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Role</th>
+            <th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody id="userTableBody"></tbody>
+      </table>
+      <div class="add-user-form">
+        <input class="add-user-input" id="newUsername" placeholder="Username ใหม่">
+        <input class="add-user-input" id="newPassword" placeholder="Password" type="password">
+        <select class="add-user-input" id="newRole" style="flex:0.5;">
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+        <button class="btn-add-user" onclick="addUser()">➕ เพิ่ม</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- HEADER -->
 <div class="hdr">
@@ -323,9 +443,19 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
       <div style="font-size:11px;color:var(--muted);margin-top:1px;">ระบบติดตามสถานะพัดลมดูดอากาศ · 3,845 เครื่อง</div>
     </div>
   </div>
-  <div class="hdr-r">
+  <div class="hdr-r" id="hdrRight">
+  <div id="userBadgeWrap" style="display:flex;align-items:center;gap:8px;">
+    <div class="user-badge" id="userBadge" onclick="onBadgeClick()">
+      <span>👤</span>
+      <span class="ub-name" id="badgeName">-</span>
+      <span class="ub-role" id="badgeRole"></span>
+    </div>
+    <button class="btn-logout" onclick="doLogout()">ออกจากระบบ</button>
+  </div>
+  <div id="hdrOrigRight">
     <div class="live-badge"><div class="live-dot"></div>LIVE</div>
     <div class="clock" id="clock">13:45:07</div>
+  </div>
   </div>
 </div>
 
@@ -13313,6 +13443,159 @@ function startAutoSync(intervalMs = 30000) {
   syncInterval = setInterval(syncFromSheets, intervalMs);
 }
 
+
+// ─── LOGIN SYSTEM ────────────────────────────────────────
+// FNV-1a hash
+function fnvHash(str) {
+  let h = BigInt('0xcbf29ce484222325');
+  for (const c of new TextEncoder().encode(str)) {
+    h ^= BigInt(c);
+    h = BigInt.asUintN(64, h * BigInt('0x100000001b3'));
+  }
+  return h.toString(16).padStart(16,'0');
+}
+
+// Default users (เพิ่มเติมได้จาก Admin Panel ผ่าน localStorage)
+const DEFAULT_USERS = {
+  'uthai':     {hash:'ef9b8b1d4add2028', role:'admin', name:'อุทัย'},
+  'adisak':    {hash:'1fabbdf10314a21d', role:'user',  name:'อดิศักดิ์'},
+  'wirat':     {hash:'1fabbdf10314a21d', role:'user',  name:'วิรัตน์'},
+  'yuttachai': {hash:'1fabbdf10314a21d', role:'user',  name:'ยุทธชัย'},
+  'pornprom':  {hash:'1fabbdf10314a21d', role:'user',  name:'พรพรหม'},
+  'pattadon':  {hash:'1fabbdf10314a21d', role:'user',  name:'ภัทธดล'},
+  'kriangsak': {hash:'1fabbdf10314a21d', role:'user',  name:'เกรียงศักดิ์'},
+};
+
+const AUTH_KEY    = 'eaf_auth_session';
+const USERS_KEY   = 'eaf_users_db';
+
+let currentUser = null;
+
+function getUsersDB() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(USERS_KEY) || '{}');
+    return Object.assign({}, DEFAULT_USERS, saved);
+  } catch(e) { return DEFAULT_USERS; }
+}
+
+function saveUsersDB(db) {
+  // Only save non-default users or modified ones
+  const extra = {};
+  for (const [u, d] of Object.entries(db)) {
+    if (!DEFAULT_USERS[u] || DEFAULT_USERS[u].hash !== d.hash || DEFAULT_USERS[u].role !== d.role) {
+      extra[u] = d;
+    }
+  }
+  localStorage.setItem(USERS_KEY, JSON.stringify(extra));
+}
+
+function doLogin() {
+  const username = document.getElementById('loginUser').value.trim().toLowerCase();
+  const password = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginErr');
+
+  if (!username || !password) {
+    err.textContent = '⚠️ กรุณากรอก Username และ Password';
+    return;
+  }
+
+  const db = getUsersDB();
+  const user = db[username];
+  if (!user) { err.textContent = '❌ ไม่พบ Username นี้ในระบบ'; return; }
+
+  const hash = fnvHash(password);
+  if (hash !== user.hash) { err.textContent = '❌ Password ไม่ถูกต้อง'; return; }
+
+  // Login success
+  currentUser = { username, name: user.name, role: user.role };
+  localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser));
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('badgeName').textContent = user.name || username;
+  document.getElementById('badgeRole').textContent = user.role === 'admin' ? '⚙️ Admin' : '';
+  err.textContent = '';
+  showToast('🔐 เข้าสู่ระบบสำเร็จ — ยินดีต้อนรับ ' + (user.name || username));
+}
+
+function doLogout() {
+  currentUser = null;
+  localStorage.removeItem(AUTH_KEY);
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginErr').textContent = '';
+  document.getElementById('loginOverlay').style.display = 'flex';
+}
+
+function onBadgeClick() {
+  if (currentUser && currentUser.role === 'admin') {
+    openAdminPanel();
+  }
+}
+
+function openAdminPanel() {
+  renderUserTable();
+  document.getElementById('adminPanel').classList.add('show');
+}
+
+function closeAdminPanel() {
+  document.getElementById('adminPanel').classList.remove('show');
+}
+
+function renderUserTable() {
+  const db = getUsersDB();
+  const tbody = document.getElementById('userTableBody');
+  tbody.innerHTML = '';
+  for (const [u, d] of Object.entries(db)) {
+    const tr = document.createElement('tr');
+    const isMe = currentUser && currentUser.username === u;
+    tr.innerHTML = `
+      <td>${d.name || u} <span style="color:#6a8a7a;font-size:11px;">(${u})</span></td>
+      <td><span class="role-badge ${d.role}">${d.role === 'admin' ? '⚙️ Admin' : '👤 User'}</span></td>
+      <td>${isMe ? '<span style="color:#6a8a7a;font-size:11px;">— ตัวเอง</span>' :
+        `<button class="btn-del-user" onclick="deleteUser('${u}')">🗑 ลบ</button>`}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+function addUser() {
+  const uname = document.getElementById('newUsername').value.trim().toLowerCase();
+  const pass  = document.getElementById('newPassword').value;
+  const role  = document.getElementById('newRole').value;
+  if (!uname || !pass) { showToast('⚠️ กรอก Username และ Password', 'err'); return; }
+  const db = getUsersDB();
+  if (db[uname]) { showToast('⚠️ Username นี้มีอยู่แล้ว', 'err'); return; }
+  db[uname] = { hash: fnvHash(pass), role, name: uname };
+  saveUsersDB(db);
+  document.getElementById('newUsername').value = '';
+  document.getElementById('newPassword').value = '';
+  renderUserTable();
+  showToast('✅ เพิ่มผู้ใช้ ' + uname + ' สำเร็จ');
+}
+
+function deleteUser(username) {
+  if (!confirm('ลบผู้ใช้ ' + username + ' ?')) return;
+  const db = getUsersDB();
+  delete db[username];
+  saveUsersDB(db);
+  renderUserTable();
+  showToast('🗑 ลบผู้ใช้ ' + username + ' แล้ว');
+}
+
+// Auto-login from session
+function initAuth() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
+    if (saved && saved.username) {
+      currentUser = saved;
+      document.getElementById('loginOverlay').style.display = 'none';
+      document.getElementById('badgeName').textContent = saved.name || saved.username;
+      document.getElementById('badgeRole').textContent = saved.role === 'admin' ? '⚙️ Admin' : '';
+      return;
+    }
+  } catch(e) {}
+  document.getElementById('loginOverlay').style.display = 'flex';
+}
+
 const GS_PM = 'https://script.google.com/macros/s/AKfycbwBSFhK6PPjJXhFucWjUqsil9lqprlbCDJx7tCBOQBFIft5qmly8Xa9EVJJOOEdIfY/exec';
 let pmSelIdx = null;
 let pmStatus = null;
@@ -13488,6 +13771,7 @@ function showToast(msg, type='') {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3200);
 }
+initAuth();
 </script>
 
 </body></html>
