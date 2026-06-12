@@ -373,6 +373,101 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .btn-logout{padding:4px 10px;background:rgba(255,50,50,.1);border:1px solid rgba(255,50,50,.3);
   color:#ff6666;border-radius:6px;font-size:11px;cursor:pointer;}
 .btn-logout:hover{background:rgba(255,50,50,.2);}
+
+/* ── MAP MODAL ── */
+.map-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.map-overlay.show{opacity:1;pointer-events:all;}
+.map-modal{background:var(--card);border:1px solid var(--border2);border-radius:14px;width:96%;max-width:520px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;transform:translateY(20px);transition:transform .2s;}
+.map-overlay.show .map-modal{transform:translateY(0);}
+.map-hdr{padding:14px 18px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0;}
+.map-hdr-left{display:flex;align-items:center;gap:10px;}
+.map-title{font-size:15px;font-weight:700;color:var(--text);}
+.map-subtitle{font-size:11px;color:var(--muted);margin-top:1px;}
+.map-close{background:transparent;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 6px;border-radius:5px;}
+.map-close:hover{color:var(--text);}
+
+/* floor tabs */
+.map-floor-scroll{overflow-x:auto;padding:10px 14px 6px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.map-floor-tabs{display:flex;gap:6px;width:max-content;}
+.map-ftab{padding:5px 12px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.map-ftab:hover{border-color:var(--accent2);color:var(--accent);}
+.map-ftab.active{background:rgba(0,229,255,.12);border-color:var(--accent);color:var(--accent);font-weight:700;}
+
+/* zone grid */
+.map-body{overflow-y:auto;padding:12px 14px 16px;flex:1;}
+.map-zone-block{margin-bottom:14px;}
+.map-zone-lbl{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin-bottom:7px;text-transform:uppercase;}
+.map-key-grid{display:flex;flex-wrap:wrap;gap:5px;}
+
+/* fan keys - keyboard style */
+.mkey{
+  min-width:54px;padding:6px 7px 5px;
+  border-radius:6px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-family:'IBM Plex Mono',monospace;
+  border:none;
+  transition:transform .1s,box-shadow .1s;
+  position:relative;
+}
+.mkey:active{transform:translateY(2px);}
+.mkey .mk-id{font-size:9px;font-weight:700;letter-spacing:.02em;line-height:1.1;}
+.mkey .mk-dot{width:6px;height:6px;border-radius:50%;}
+
+/* ok state */
+.mkey.ok{
+  background:linear-gradient(180deg,#1a3d2a,#0f2a1c);
+  border:1px solid #2a6a40;
+  box-shadow:0 2px 0 #0a1f12,0 0 8px rgba(0,200,80,.15);
+  color:#00e050;
+}
+.mkey.ok .mk-dot{background:#00ff55;box-shadow:0 0 5px #00ff55;}
+
+/* broken state */
+.mkey.broken{
+  background:linear-gradient(180deg,#3d1a1a,#2a0f0f);
+  border:1px solid #8b2020;
+  box-shadow:0 2px 0 #1f0a0a,0 0 8px rgba(255,50,50,.2);
+  color:#ff5555;
+  animation:mapBlink 1s infinite;
+}
+.mkey.broken .mk-dot{background:#ff3333;box-shadow:0 0 5px #ff3333;}
+
+/* unknown state */
+.mkey.unknown{
+  background:linear-gradient(180deg,#1a1f2a,#121620);
+  border:1px solid #2a3550;
+  box-shadow:0 2px 0 #0a0f1a;
+  color:#4a6a90;
+}
+.mkey.unknown .mk-dot{background:#4a6a90;}
+
+/* pm state */
+.mkey.pm{
+  background:linear-gradient(180deg,#2e2510,#1c1a0c);
+  border:1px solid #8a7200;
+  box-shadow:0 2px 0 #5a4a00,0 0 8px rgba(255,200,0,.15);
+  color:#ffd000;
+  animation:mapBlink 1s infinite;
+}
+.mkey.pm .mk-dot{background:#ffd700;box-shadow:0 0 5px #ffd700;}
+
+@keyframes mapBlink{0%,100%{opacity:1;}50%{opacity:.55;}}
+
+/* map legend */
+.map-legend{display:flex;gap:12px;flex-wrap:wrap;padding:8px 14px 10px;border-top:1px solid var(--border);flex-shrink:0;}
+.map-leg-i{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);}
+.map-leg-dot{width:9px;height:9px;border-radius:2px;}
+.map-leg-dot.ok{background:#00e050;}
+.map-leg-dot.broken{background:#ff3333;}
+.map-leg-dot.unknown{background:#4a6a90;}
+.map-leg-dot.pm{background:#ffd000;}
+
+/* map button in modal footer */
+.btn-map{background:rgba(255,165,0,.08);border:1px solid rgba(255,165,0,.25);color:#ffa500;
+  border-radius:8px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;
+  padding:8px 14px;cursor:pointer;transition:all .15s;}
+.btn-map:hover{background:rgba(255,165,0,.15);}
+
 </style>
 </head>
 <body>
@@ -504,6 +599,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
   <button class="fbtn ok" id="fb-ok" onclick="setSF('ok',this)">🟢 ปกติ</button>
   <button class="fbtn br" id="fb-br" onclick="setSF('broken',this)">🔴 ชำรุด</button>
   <button class="fbtn pm" id="fb-pm" onclick="setSF('pm',this)">🟡 PM</button>
+  <button class="fbtn" onclick="openMapCtrl()" title="แผนที่ชั้น" style="font-size:15px;">🗺</button>
   <input class="ctrl search" id="srch" placeholder="ค้นหา เช่น 1EF-8/53" oninput="applyFilter()">
   <button class="btn-toggle-pm" id="btnTogglePM" onclick="togglePMMode()">🔧 โหมด PM</button>
   <button class="btn-toggle-pm" style="border-color:rgba(99,179,237,.4);color:rgba(99,179,237,.9);margin-left:6px;" onclick="saveToFile()">💾 บันทึกไฟล์</button>
@@ -12645,6 +12741,32 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
   <div class="leg-i"><div class="leg-k unknown"></div>ไม่ทราบ</div>
 </div>
 
+
+<!-- MAP MODAL -->
+<div class="map-overlay" id="mapModal" onclick="closeMapOut(event)">
+  <div class="map-modal">
+    <div class="map-hdr">
+      <div class="map-hdr-left">
+        <div>
+          <div class="map-title">🗺 แผนผังพัดลมดูดอากาศ</div>
+          <div class="map-subtitle" id="map-subtitle">กดที่พัดลมเพื่อดูรายละเอียด</div>
+        </div>
+      </div>
+      <button class="map-close" onclick="closeMapModal()">✕</button>
+    </div>
+    <div class="map-floor-scroll">
+      <div class="map-floor-tabs" id="mapFloorTabs"></div>
+    </div>
+    <div class="map-body" id="mapBody"></div>
+    <div class="map-legend">
+      <div class="map-leg-i"><div class="map-leg-dot ok"></div>ปกติ</div>
+      <div class="map-leg-i"><div class="map-leg-dot broken"></div>ชำรุด</div>
+      <div class="map-leg-i"><div class="map-leg-dot pm"></div>กำลัง PM</div>
+      <div class="map-leg-i"><div class="map-leg-dot unknown"></div>ไม่ทราบ</div>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL -->
 <div class="moverlay" id="modal" onclick="closeOut(event)">
   <div class="modal">
@@ -12671,6 +12793,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
       </div>
     </div>
     <div class="mfoot">
+      <button class="btn-map" onclick="openMapFromModal()">🗺 แผนที่ชั้น</button>
       <button class="btn-save" onclick="saveStatus()">💾 บันทึกสถานะ</button>
       <button class="btn-open-pm" onclick="openPMForm()">📋 แบบฟอร์ม PM</button>
       <button class="btn-mclose" onclick="closeModal()">ปิด</button>
@@ -13772,6 +13895,144 @@ function showToast(msg, type='') {
   setTimeout(() => t.classList.remove('show'), 3200);
 }
 initAuth();
+
+// ─── MAP MODAL ────────────────────────────────────────────
+const MAP_FLOORS = ['B4','B3','B2','B1','1','2','3','4','5','6','7','8','9','10',
+  '11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','MZ'];
+
+const ZONE_ORDER = ['A','B','C','D','PC'];
+
+let mapCurFloor = '1';
+
+function buildFloorIndex() {
+  // {floor: {zone: [rawIdx, ...]}}
+  const idx = {};
+  RAW.forEach((r, i) => {
+    const fl = String(r[6]).trim();
+    const zn = String(r[5]).trim();
+    if (!idx[fl]) idx[fl] = {};
+    if (!idx[fl][zn]) idx[fl][zn] = [];
+    idx[fl][zn].push(i);
+  });
+  return idx;
+}
+
+let _floorIdx = null;
+function getFloorIdx() {
+  if (!_floorIdx) _floorIdx = buildFloorIndex();
+  return _floorIdx;
+}
+
+function openMapModal(startFloor) {
+  const fl = startFloor || mapCurFloor || '1';
+  mapCurFloor = fl;
+  renderMapFloorTabs();
+  renderMapBody(fl);
+  document.getElementById('mapModal').classList.add('show');
+}
+
+function openMapFromModal() {
+  const fl = selIdx !== null ? String(RAW[selIdx][6]).trim() : mapCurFloor;
+  closeModal();
+  setTimeout(() => openMapModal(fl), 80);
+}
+
+function closeMapModal() {
+  document.getElementById('mapModal').classList.remove('show');
+}
+
+function closeMapOut(e) {
+  if (e.target === document.getElementById('mapModal')) closeMapModal();
+}
+
+function renderMapFloorTabs() {
+  const idx = getFloorIdx();
+  const tabs = document.getElementById('mapFloorTabs');
+  tabs.innerHTML = '';
+  MAP_FLOORS.forEach(fl => {
+    if (!idx[fl]) return;
+    const btn = document.createElement('button');
+    btn.className = 'map-ftab' + (fl === mapCurFloor ? ' active' : '');
+    btn.textContent = fl === 'MZ' ? 'MZ' : (fl.startsWith('B') ? fl : `${fl}`);
+    btn.onclick = () => {
+      mapCurFloor = fl;
+      document.querySelectorAll('.map-ftab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderMapBody(fl);
+      // scroll active tab into view
+      btn.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+    };
+    tabs.appendChild(btn);
+  });
+  // scroll active into view after render
+  setTimeout(() => {
+    const act = tabs.querySelector('.map-ftab.active');
+    if (act) act.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+  }, 50);
+}
+
+function renderMapBody(fl) {
+  const idx = getFloorIdx();
+  const body = document.getElementById('mapBody');
+  const subtitle = document.getElementById('map-subtitle');
+  body.innerHTML = '';
+
+  const flData = idx[fl] || {};
+  const zones = Object.keys(flData).sort((a, b) => {
+    const ai = ZONE_ORDER.indexOf(a), bi = ZONE_ORDER.indexOf(b);
+    return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+  });
+
+  if (!zones.length) {
+    body.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">ไม่มีข้อมูลชั้นนี้</div>';
+    subtitle.textContent = `ชั้น ${fl}`;
+    return;
+  }
+
+  // count stats
+  let total = 0, broken = 0, ok = 0;
+
+  zones.forEach(zn => {
+    const indices = flData[zn];
+    total += indices.length;
+    const block = document.createElement('div');
+    block.className = 'map-zone-block';
+
+    const lbl = document.createElement('div');
+    lbl.className = 'map-zone-lbl';
+    lbl.textContent = `Zone ${zn}`;
+    block.appendChild(lbl);
+
+    const grid = document.createElement('div');
+    grid.className = 'map-key-grid';
+
+    indices.forEach(rawI => {
+      const r = RAW[rawI];
+      const st = getDisplayStatus(rawI);
+      if (st === 'broken') broken++;
+      else if (st === 'ok') ok++;
+
+      const btn = document.createElement('button');
+      btn.className = `mkey ${st}`;
+      btn.title = `${r[0]} | ${r[4] || '-'}`;
+      btn.innerHTML = `<div class="mk-id">${r[0]}</div><div class="mk-dot"></div>`;
+      btn.onclick = () => {
+        closeMapModal();
+        setTimeout(() => openModal(rawI), 80);
+      };
+      grid.appendChild(btn);
+    });
+
+    block.appendChild(grid);
+    body.appendChild(block);
+  });
+
+  subtitle.textContent = `ชั้น ${fl} · ${total} เครื่อง · ชำรุด ${broken}`;
+}
+
+// expose map open from header ctrl bar
+function openMapCtrl() { openMapModal(filter.floor || '1'); }
+
 </script>
 
 </body></html>
