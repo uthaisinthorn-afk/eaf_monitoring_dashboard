@@ -12942,6 +12942,24 @@ RAW.forEach((r, i) => {
 const floorsSorted = [...allFloors].sort((a,b) => floorOrder(a)-floorOrder(b));
 const zonesSorted = [...allZones].sort();
 
+// ─── Natural sort สำหรับหมายเลขเครื่องจักร ─────────────
+// เช่น 1EF-1/2R < 1EF-1/10R < 1EF-1/45R
+function machineIdOrder(id) {
+  // แยก prefix / ตัวเลข / suffix เช่น "1EF-B3/7" → ['1EF-B3/', 7, '']
+  return id.replace(/(\d+)/g, (m) => m.padStart(6, '0'));
+}
+
+// เรียงลำดับ idx ใน byFloorZone ตาม machineId
+Object.values(byFloorZone).forEach(zones => {
+  Object.keys(zones).forEach(zn => {
+    zones[zn].sort((a, b) => {
+      const ka = machineIdOrder(RAW[a][0]);
+      const kb = machineIdOrder(RAW[b][0]);
+      return ka < kb ? -1 : ka > kb ? 1 : 0;
+    });
+  });
+});
+
 // ─── INIT ─────────────────────────────────────────────────
 window.onload = () => {
   // Populate floor filter
