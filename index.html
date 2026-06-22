@@ -12994,6 +12994,30 @@ window.onload = () => {
   updateStats();
   updateClock();
   setInterval(updateClock, 1000);
+
+  // ── โหลดสถานะล่าสุดจาก Google Sheet ──
+  // แสดง sync indicator
+  const syncDot = document.querySelector('.sync-dot');
+  const syncText = document.querySelector('.sync-bar span');
+  if (syncDot) syncDot.className = 'sync-dot syncing';
+  if (syncText) syncText.textContent = 'กำลังโหลดข้อมูลจาก Sheet...';
+
+  loadStatusFromSheet().then(() => {
+    if (syncDot) syncDot.className = 'sync-dot ok';
+    if (syncText) syncText.textContent = 'ข้อมูล sync แล้ว · ' + new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  }).catch(() => {
+    if (syncDot) syncDot.className = 'sync-dot err';
+    if (syncText) syncText.textContent = 'ไม่สามารถโหลดจาก Sheet ได้';
+  });
+
+  // Auto-refresh ทุก 5 นาที
+  setInterval(() => {
+    if (syncDot) syncDot.className = 'sync-dot syncing';
+    loadStatusFromSheet().then(() => {
+      if (syncDot) syncDot.className = 'sync-dot ok';
+      if (syncText) syncText.textContent = 'ข้อมูล sync แล้ว · ' + new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+    });
+  }, 5 * 60 * 1000);
 };
 
 function updateClock() {
@@ -13631,6 +13655,59 @@ function initAuth() {
 }
 
 const GS_PM = 'https://script.google.com/macros/s/AKfycbwBSFhK6PPjJXhFucWjUqsil9lqprlbCDJx7tCBOQBFIft5qmly8Xa9EVJJOOEdIfY/exec';
+// ── Shared backend (doGet endpoint) ──────────────────────
+const GS_URL = 'https://script.google.com/macros/s/AKfycbz5YxCFkJhppgMCGRIu26AouwsFstwSAZpnH7wj0j9Ab8p3pTuqkmjYzdR-_-ppTmKn/exec';
+
+// โหลดสถานะจาก Sheet แล้ว merge เข้า overrides + pmSet
+async function loadStatusFromSheet() {
+  try {
+    const res = await fetch(GS_URL + '?action=getLogs', { cache: 'no-store' });
+    if (!res.ok) return;
+    const json = await res.json();
+    if (!json.logs || !json.logs.length) return;
+
+    // สร้าง map: machineId -> สถานะล่าสุด (เรียงจากใหม่ไปเก่า ใช้แถวสุดท้าย)
+    const statusMap = {}; // machineId -> { status, date }
+    json.logs.forEach(log => {
+      const mid = (log.machine_id || '').trim();
+      if (!mid) return;
+      // เก็บแถวล่าสุดของแต่ละ machine_id
+      if (!statusMap[mid] || log.date >= statusMap[mid].date) {
+        statusMap[mid] = { status: log.status, date: log.date, asset: log.asset_no };
+      }
+    });
+
+    // Map status label → internal key
+    function labelToKey(st) {
+      if (!st) return null;
+      if (st.includes('ดำเนินการได้') || st.includes('done')) return 'ok';
+      if (st.includes('ชำรุด') || st.includes('machine_broken') || st.includes('หยุดใช้')) return 'broken';
+      if (st.includes('ต้องซ่อม')) return 'broken';
+      if (st.includes('ระหว่างซ่อม')) return 'broken';
+      return null;
+    }
+
+    // Apply ลงใน RAW indexes
+    RAW.forEach((r, i) => {
+      const mid = (r[0] || '').trim(); // r[0] = machine_id
+      if (statusMap[mid]) {
+        const key = labelToKey(statusMap[mid].status);
+        if (key) {
+          overrides[i] = key;
+          if (key === 'ok') pmSet.add(i);
+          else pmSet.delete(i);
+        }
+      }
+    });
+
+    updateStats();
+    render();
+    showToast('🔄 โหลดข้อมูลจาก Sheet สำเร็จ');
+  } catch(e) {
+    console.warn('loadStatusFromSheet error:', e.message);
+    // fallback: ใช้ localStorage เดิม
+  }
+}
 let pmSelIdx = null;
 let pmStatus = null;
 
