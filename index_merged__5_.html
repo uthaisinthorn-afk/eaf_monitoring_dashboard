@@ -163,6 +163,54 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .iitem{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:10px 12px;}
 .iitem.wide{grid-column:span 2;}
+
+/* ── ASSET CHECKBOX ─────────────────────────────── */
+.asset-toggle-row{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;border-radius:8px;
+  background:rgba(255,255,255,.03);
+  border:1px solid var(--border);
+  grid-column:span 2;
+  cursor:pointer;user-select:none;
+}
+.asset-toggle-row:hover{background:rgba(255,255,255,.06);}
+.asset-cb{
+  appearance:none;-webkit-appearance:none;
+  width:18px;height:18px;border-radius:4px;
+  border:2px solid #444;background:#111;
+  cursor:pointer;flex-shrink:0;position:relative;
+  transition:all .15s;
+}
+.asset-cb:checked{
+  background:var(--accent);border-color:var(--accent);
+}
+.asset-cb:checked::after{
+  content:'✓';position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-52%);
+  color:#000;font-size:11px;font-weight:900;
+}
+.asset-cb-label{
+  font-size:13px;font-weight:600;color:var(--text);
+  flex:1;
+}
+.asset-input-row{
+  grid-column:span 2;
+  display:none;
+}
+.asset-input-row.show{display:block;}
+.asset-edit-input{
+  width:100%;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:6px;padding:9px 12px;
+  color:var(--text);font-size:13px;
+  font-family:'IBM Plex Mono',monospace;
+  outline:none;box-sizing:border-box;
+}
+.asset-edit-input:focus{border-color:var(--accent);}
+.asset-noid-badge{
+  font-size:12px;color:#fb923c;font-style:italic;
+  padding:2px 0;
+}
 .ilbl{font-size:10px;color:var(--muted);margin-bottom:3px;font-family:'IBM Plex Mono',monospace;}
 .ival{font-size:13px;font-weight:600;color:var(--text);}
 .st-sel{display:flex;gap:7px;}
@@ -12804,7 +12852,16 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
         <div class="iitem"><div class="ilbl">FLOOR</div><div class="ival" id="m-floor">ชั้น 21</div></div>
         <div class="iitem"><div class="ilbl">ZONE</div><div class="ival" id="m-zone">โซน A</div></div>
         <div class="iitem"><div class="ilbl">MODEL</div><div class="ival" id="m-model">250X</div></div>
-        <div class="iitem"><div class="ilbl">ASSET NO.</div><div class="ival" id="m-asset">0225614140002992198</div></div>
+        <!-- Asset checkbox + inline edit -->
+        <label class="asset-toggle-row" id="m-asset-row">
+          <input type="checkbox" class="asset-cb" id="m-asset-cb" onchange="toggleAssetInput(this)">
+          <span class="asset-cb-label">มีหมายเลขครุภัณฑ์</span>
+          <span class="asset-noid-badge" id="m-noid-badge">🔲 ไม่มีหมายเลขครุภัณฑ์</span>
+        </label>
+        <div class="asset-input-row" id="m-asset-input-row">
+          <div class="ilbl" style="margin-bottom:5px;">ASSET NO.</div>
+          <input class="asset-edit-input" id="m-asset" type="text" placeholder="กรอกหมายเลขครุภัณฑ์ เช่น 02-2567-4140-002-04-0877">
+        </div>
         <div class="iitem wide"><div class="ilbl">สถานที่ติดตั้ง</div><div class="ival" id="m-loc">ห้องพักพิเศษ-8</div></div>
         <div class="iitem wide"><div class="ilbl">แผนก</div><div class="ival" id="m-dept">Single Ward (Orthopidic)</div></div>
       </div>
@@ -13385,7 +13442,17 @@ function openModal(i) {
   document.getElementById('m-floor').textContent = `ชั้น ${r[6]}`;
   document.getElementById('m-zone').textContent  = `โซน ${r[5]}`;
   document.getElementById('m-model').textContent = r[3] || '-';
-  document.getElementById('m-asset').textContent = r[1] || 'ไม่มีหมายเลข';
+  // ── Asset checkbox ──
+  var assetVal = (r[1] || '').trim();
+  var hasAsset  = assetVal !== '' && assetVal !== 'ไม่มีหมายเลขครุภัณฑ์';
+  var cb   = document.getElementById('m-asset-cb');
+  var ainp = document.getElementById('m-asset');
+  var arow = document.getElementById('m-asset-input-row');
+  var nbdg = document.getElementById('m-noid-badge');
+  cb.checked = hasAsset;
+  ainp.value = hasAsset ? assetVal : '';
+  arow.classList.toggle('show', hasAsset);
+  nbdg.style.display = hasAsset ? 'none' : '';
   document.getElementById('m-loc').textContent   = r[4] || '-';
   document.getElementById('m-dept').textContent  = r[7] || '-';
 
@@ -13409,6 +13476,22 @@ function closeModal() {
   selIdx = null;
 }
 
+// ── toggle asset input เมื่อ tick checkbox ──
+function toggleAssetInput(cb) {
+  var arow = document.getElementById('m-asset-input-row');
+  var ainp = document.getElementById('m-asset');
+  var nbdg = document.getElementById('m-noid-badge');
+  if (cb.checked) {
+    arow.classList.add('show');
+    nbdg.style.display = 'none';
+    ainp && ainp.focus();
+  } else {
+    arow.classList.remove('show');
+    nbdg.style.display = '';
+    if (ainp) ainp.value = '';
+  }
+}
+
 function closeOut(e) { if (e.target === document.getElementById('modal')) closeModal(); }
 
 function selSt(s, el) {
@@ -13423,6 +13506,43 @@ function saveStatus() {
     showToast('⚠️ สถานะ PM จะเปิดผ่านโหมด PM เท่านั้น', 'warn');
     return;
   }
+
+  // ── บันทึก asset number จาก checkbox ──
+  var cb      = document.getElementById('m-asset-cb');
+  var ainp    = document.getElementById('m-asset');
+  if (cb) {
+    if (cb.checked) {
+      var newAsset = (ainp ? ainp.value.trim() : '');
+      if (!newAsset) {
+        showToast('⚠️ กรุณากรอกหมายเลขครุภัณฑ์', 'warn');
+        ainp && ainp.focus();
+        return;
+      }
+      RAW[selIdx][1] = newAsset;
+    } else {
+      RAW[selIdx][1] = 'ไม่มีหมายเลขครุภัณฑ์';
+    }
+    updateStats();
+  }
+
+  // ── ส่ง asset_no ไป Google Sheets แบบ background ──
+  if (cb) {
+    var assetToSend = cb.checked
+      ? (ainp ? ainp.value.trim() : '')
+      : 'ไม่มีหมายเลขครุภัณฑ์';
+    var machineIdToSend = RAW[selIdx][0];
+    fetch(GS_PM, {
+      method: 'POST',
+      mode:   'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action:     'update_asset',
+        machine_id: machineIdToSend,
+        asset_no:   assetToSend
+      })
+    }).catch(function(){});  // silent fail
+  }
+
   overrides[selIdx] = selModalStatus;
   if (pmSet.has(selIdx)) pmSet.delete(selIdx);
   saveOverrides(); savePMSet();
