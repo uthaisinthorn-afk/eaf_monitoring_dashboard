@@ -14187,7 +14187,7 @@ function mapReset(){
   },{passive:false});
   vp.addEventListener('mousedown',function(e){_mDrag=true;_mSX=e.clientX;_mSY=e.clientY;_mSPX=_mPanX;_mSPY=_mPanY;});
   window.addEventListener('mousemove',function(e){if(!_mDrag)return;_mPanX=_mSPX+(e.clientX-_mSX);_mPanY=_mSPY+(e.clientY-_mSY);_mApply();});
-  window.addEventListener('mouseup',function(){_mDrag=false;});
+  window.addEventListener('mouseup',function(){_mDrag=false;_mSX=undefined;_mSY=undefined;});
   vp.addEventListener('touchstart',function(e){if(e.touches.length===1){_mDrag=true;_mSX=e.touches[0].clientX;_mSY=e.touches[0].clientY;_mSPX=_mPanX;_mSPY=_mPanY;}},{passive:true});
   vp.addEventListener('touchmove',function(e){if(!_mDrag||e.touches.length!==1)return;_mPanX=_mSPX+(e.touches[0].clientX-_mSX);_mPanY=_mSPY+(e.touches[0].clientY-_mSY);_mApply();},{passive:true});
   vp.addEventListener('touchend',function(){_mDrag=false;});
@@ -14333,9 +14333,8 @@ function hideCrosshair() {
   vp.addEventListener('click', function(e) {
     if (!_pickMode) return;
     // ข้ามถ้า drag
-    if (typeof _mSX !== 'undefined' &&
-        (Math.abs(e.clientX - _mSX) > 5 || Math.abs(e.clientY - _mSY) > 5)) return;
-
+    
+       
     var r    = vp.getBoundingClientRect();
     var vpX  = e.clientX - r.left;
     var vpY  = e.clientY - r.top;
