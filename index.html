@@ -14333,8 +14333,8 @@ function hideCrosshair() {
   vp.addEventListener('click', function(e) {
     if (!_pickMode) return;
     // ข้ามถ้า drag
-    
-       
+    if (_mDrag) return;
+
     var r    = vp.getBoundingClientRect();
     var vpX  = e.clientX - r.left;
     var vpY  = e.clientY - r.top;
