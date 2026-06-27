@@ -14187,7 +14187,7 @@ function mapReset(){
   },{passive:false});
   vp.addEventListener('mousedown',function(e){_mDrag=true;_mSX=e.clientX;_mSY=e.clientY;_mSPX=_mPanX;_mSPY=_mPanY;});
   window.addEventListener('mousemove',function(e){if(!_mDrag)return;_mPanX=_mSPX+(e.clientX-_mSX);_mPanY=_mSPY+(e.clientY-_mSY);_mApply();});
-  window.addEventListener('mouseup',function(){_mDrag=false;_mSX=undefined;_mSY=undefined;});
+  window.addEventListener('mouseup',function(){_mDrag=false;});
   vp.addEventListener('touchstart',function(e){if(e.touches.length===1){_mDrag=true;_mSX=e.touches[0].clientX;_mSY=e.touches[0].clientY;_mSPX=_mPanX;_mSPY=_mPanY;}},{passive:true});
   vp.addEventListener('touchmove',function(e){if(!_mDrag||e.touches.length!==1)return;_mPanX=_mSPX+(e.touches[0].clientX-_mSX);_mPanY=_mSPY+(e.touches[0].clientY-_mSY);_mApply();},{passive:true});
   vp.addEventListener('touchend',function(){_mDrag=false;});
@@ -14310,7 +14310,7 @@ function hideCrosshair() {
 }
 
 // mousemove → แสดง crosshair
-(function(){
+document.addEventListener('DOMContentLoaded', function(){
   var vp = document.getElementById('mapVP');
   if (!vp) return;
 
@@ -14342,6 +14342,10 @@ function hideCrosshair() {
     var imgX = Math.round((vpX - _mPanX) / _mScale);
     var imgY = Math.round((vpY - _mPanY) / _mScale);
     var mid  = _currentMachineId;
+    if (!mid && typeof selIdx !== 'undefined' && selIdx !== null && typeof RAW !== 'undefined') {
+      mid = (RAW[selIdx][0] || '').trim().toLowerCase();
+      _currentMachineId = mid;
+    }
     if (!mid) { showPickToast('⚠️ ไม่พบ Machine ID', 2000); return; }
 
     // บันทึกพิกัด
@@ -14365,7 +14369,7 @@ function hideCrosshair() {
     _mPanY  = vp.clientHeight / 2 - imgY * _mScale;
     _mApply();
   });
-})();
+});
 
 // override openMapFull เพื่อ track _currentMachineId
 var _origOpenMapFull = openMapFull;
