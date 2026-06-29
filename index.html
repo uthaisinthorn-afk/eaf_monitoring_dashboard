@@ -299,6 +299,10 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .pm-st-btn.br:hover,.pm-st-btn.br.sel{border-color:#ff4444;background:rgba(255,68,68,.08);color:#ff4444;}
 .pm-st-btn.un:hover,.pm-st-btn.un.sel{border-color:#ffd700;background:rgba(255,215,0,.08);color:#ffd700;}
 .pm-checklist{display:flex;flex-direction:column;gap:8px;}
+.pm-chk-all-btn{width:100%;padding:8px 12px;border-radius:8px;border:1px dashed rgba(0,204,122,.4);
+  background:rgba(0,204,122,.06);color:#00cc7a;font-family:'Sarabun',sans-serif;font-size:13px;
+  font-weight:700;cursor:pointer;text-align:left;transition:all .15s;}
+.pm-chk-all-btn:hover{background:rgba(0,204,122,.12);border-color:#00cc7a;}
 .pm-chk-item{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);
   border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 12px;cursor:pointer;}
 .pm-chk-item input[type=checkbox]{width:16px;height:16px;accent-color:#00cc7a;flex-shrink:0;}
@@ -12992,9 +12996,17 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
     <div class="pm-section" id="pm-chk-section" style="display: block;">
       <label>Checklist การบำรุงรักษา</label>
       <div class="pm-checklist">
+        <button class="pm-chk-all-btn" onclick="pmToggleAll(this)">☐ เลือกทั้งหมด</button>
         <label class="pm-chk-item"><input type="checkbox" id="pm-c1"><span>ทำความสะอาดใบพัดและตัวเครื่อง</span></label>
         <label class="pm-chk-item"><input type="checkbox" id="pm-c2"><span>ทดสอบการทำงานหลังบำรุงรักษา</span></label>
         <label class="pm-chk-item"><input type="checkbox" id="pm-c3"><span>ตรวจสอบเสียงและการสั่นสะเทือนผิดปกติ</span></label>
+        <label class="pm-chk-item"><input type="checkbox" id="pm-c4"><span>ตรวจสอบสายพานและการขันแน่น</span></label>
+        <label class="pm-chk-item"><input type="checkbox" id="pm-c5"><span>ตรวจสอบตลับลูกปืน</span></label>
+        <label class="pm-chk-item"><input type="checkbox" id="pm-c6"><span>ตรวจสอบแรงดันไฟฟ้าและกระแสไฟ</span></label>
+        <label class="pm-chk-item"><input type="checkbox" id="pm-c7"><span>ทำความสะอาดกรองอากาศ (ถ้ามี)</span></label>
+        <label class="pm-chk-item"><input type="checkbox" id="pm-c8"><span>ตรวจสอบการยึดแน่นของโครงสร้าง</span></label>
+        <label class="pm-chk-item"><input type="checkbox" id="pm-c9"><span>ทดสอบระบบความปลอดภัย</span></label>
+        <label class="pm-chk-item"><input type="checkbox" id="pm-c10"><span>บันทึกค่า RPM และอุณหภูมิ</span></label>
       </div>
     </div>
 
@@ -14034,9 +14046,8 @@ function openPMForm() {
   document.querySelectorAll('.pm-st-btn').forEach(b => b.classList.remove('sel'));
   pmStatus = null;
   document.getElementById('pm-chk-section').style.display = 'none';
-  document.getElementById('pm-c1').checked = false;
-  document.getElementById('pm-c2').checked = false;
-  document.getElementById('pm-c3').checked = false;
+  [1,2,3,4,5,6,7,8,9,10].forEach(n => { const el = document.getElementById('pm-c'+n); if(el) el.checked = false; });
+  const allBtn = document.querySelector('.pm-chk-all-btn'); if(allBtn) allBtn.textContent = '☐ เลือกทั้งหมด';
   document.getElementById('pm-note').value = '';
   pmPhotosReset();
   pmPhotoSectionVisible('ok'); // default ok
@@ -14074,9 +14085,15 @@ function pmGetModel() {
 }
 
 function pmGetChecklist() {
-  const labels = ['ทำความสะอาดใบพัดและตัวเครื่อง','ทดสอบการทำงานหลังบำรุงรักษา','ตรวจสอบเสียงและการสั่นสะเทือนผิดปกติ'];
-  const done = [1,2,3].filter(n => document.getElementById('pm-c'+n)?.checked).map(n => labels[n-1]);
+  const labels = ['ทำความสะอาดใบพัดและตัวเครื่อง','ทดสอบการทำงานหลังบำรุงรักษา','ตรวจสอบเสียงและการสั่นสะเทือนผิดปกติ','ตรวจสอบสายพานและการขันแน่น','ตรวจสอบตลับลูกปืน','ตรวจสอบแรงดันไฟฟ้าและกระแสไฟ','ทำความสะอาดกรองอากาศ (ถ้ามี)','ตรวจสอบการยึดแน่นของโครงสร้าง','ทดสอบระบบความปลอดภัย','บันทึกค่า RPM และอุณหภูมิ'];
+  const done = [1,2,3,4,5,6,7,8,9,10].filter(n => document.getElementById('pm-c'+n)?.checked).map(n => labels[n-1]);
   return done.length ? done.join(', ') : '-';
+}
+
+function pmToggleAll(btn) {
+  const allChecked = [1,2,3,4,5,6,7,8,9,10].every(n => document.getElementById('pm-c'+n)?.checked);
+  [1,2,3,4,5,6,7,8,9,10].forEach(n => { const el = document.getElementById('pm-c'+n); if(el) el.checked = !allChecked; });
+  btn.textContent = allChecked ? '☐ เลือกทั้งหมด' : '☑ ยกเลิกทั้งหมด';
 }
 
 async function pmDoSubmit() {
