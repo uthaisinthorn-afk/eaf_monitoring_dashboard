@@ -318,14 +318,6 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
   box-shadow:0 4px 20px rgba(0,204,122,.35);transition:all .15s;}
 .pm-submit-btn:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(0,204,122,.5);}
 .pm-submit-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
-.pm-print-btn{width:100%;padding:10px;border:1.5px solid rgba(46,117,182,.6);border-radius:10px;
-  background:rgba(46,117,182,.1);color:#4da6ff;font-family:'Sarabun',sans-serif;font-size:13px;
-  font-weight:700;cursor:pointer;margin-bottom:8px;transition:all .15s;}
-.pm-print-btn:hover{background:rgba(46,117,182,.2);border-color:#4da6ff;}
-.pm-quickprint-btn{width:100%;padding:10px;border:1.5px solid rgba(0,204,122,.5);border-radius:10px;
-  background:rgba(0,204,122,.08);color:#00cc7a;font-family:'Sarabun',sans-serif;font-size:13px;
-  font-weight:700;cursor:pointer;margin-bottom:8px;transition:all .15s;}
-.pm-quickprint-btn:hover{background:rgba(0,204,122,.15);border-color:#00cc7a;}
 .pm-success-banner{display:none;background:rgba(0,255,80,.1);border:1px solid rgba(0,255,80,.3);
   border-radius:10px;padding:14px 16px;text-align:center;margin-bottom:14px;}
 .pm-success-banner.show{display:block;}
@@ -13104,8 +13096,6 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
     </div>
   </div>
   <div class="pm-foot">
-    <button class="pm-quickprint-btn" id="pm-quickprint-btn" onclick="pmQuickPrint()" style="display:none;">⚡ เลือกทั้งหมด + พิมพ์ Check Sheet</button>
-    <button class="pm-print-btn" id="pm-print-btn" onclick="pmPrintCheckSheet()" style="display:none;">🖨️ พิมพ์ Check Sheet (ตามที่ติ๊ก)</button>
     <button class="pm-submit-btn" id="pm-submit-btn" onclick="pmDoSubmit()" disabled="">✅ ส่งสำเร็จ!</button>
   </div>
 </div>
@@ -14058,8 +14048,6 @@ function openPMForm() {
   document.getElementById('pm-chk-section').style.display = 'none';
   [1,2,3,4,5,6,7,8,9,10].forEach(n => { const el = document.getElementById('pm-c'+n); if(el) el.checked = false; });
   const allBtn = document.querySelector('.pm-chk-all-btn'); if(allBtn) allBtn.textContent = '☐ เลือกทั้งหมด';
-  const pb = document.getElementById('pm-print-btn'); if(pb) pb.style.display = 'none';
-  const qb = document.getElementById('pm-quickprint-btn'); if(qb) qb.style.display = 'none';
   document.getElementById('pm-note').value = '';
   pmPhotosReset();
   pmPhotoSectionVisible('ok'); // default ok
@@ -14087,13 +14075,6 @@ function pmSetStatus(val, el) {
   el.classList.add('sel');
   pmStatus = val;
   document.getElementById('pm-chk-section').style.display = (val === 'ok') ? 'block' : 'none';
-  document.getElementById('pm-print-btn').style.display = (val === 'ok' || val === 'broken') ? 'block' : 'none';
-  document.getElementById('pm-quickprint-btn').style.display = (val === 'ok') ? 'block' : 'none';
-  if (val === 'ok') {
-    // ติ๊กครบทุกข้อ default เมื่อเลือก "ดำเนินการได้"
-    [1,2,3,4,5,6,7,8,9,10].forEach(n => { const el = document.getElementById('pm-c'+n); if(el) el.checked = true; });
-    const allBtn = document.querySelector('.pm-chk-all-btn'); if(allBtn) allBtn.textContent = '☑ ยกเลิกทั้งหมด';
-  }
   pmPhotoSectionVisible(val);
 }
 
@@ -14104,109 +14085,15 @@ function pmGetModel() {
 }
 
 function pmGetChecklist() {
-  const done    = [1,2,3,4,5,6,7,8,9,10].filter(n =>  document.getElementById('pm-c'+n)?.checked);
-  const notDone = [1,2,3,4,5,6,7,8,9,10].filter(n => !document.getElementById('pm-c'+n)?.checked);
-  return 'done:' + (done.join(',') || '-') + '|notdone:' + (notDone.join(',') || '-');
+  const labels = ['ทำความสะอาดใบพัดและตัวเครื่อง','ทดสอบการทำงานหลังบำรุงรักษา','ตรวจสอบเสียงและการสั่นสะเทือนผิดปกติ','ตรวจสอบสายพานและการขันแน่น','ตรวจสอบตลับลูกปืน','ตรวจสอบแรงดันไฟฟ้าและกระแสไฟ','ทำความสะอาดกรองอากาศ (ถ้ามี)','ตรวจสอบการยึดแน่นของโครงสร้าง','ทดสอบระบบความปลอดภัย','บันทึกค่า RPM และอุณหภูมิ'];
+  const done = [1,2,3,4,5,6,7,8,9,10].filter(n => document.getElementById('pm-c'+n)?.checked).map(n => labels[n-1]);
+  return done.length ? done.join(', ') : '-';
 }
 
 function pmToggleAll(btn) {
   const allChecked = [1,2,3,4,5,6,7,8,9,10].every(n => document.getElementById('pm-c'+n)?.checked);
   [1,2,3,4,5,6,7,8,9,10].forEach(n => { const el = document.getElementById('pm-c'+n); if(el) el.checked = !allChecked; });
   btn.textContent = allChecked ? '☐ เลือกทั้งหมด' : '☑ ยกเลิกทั้งหมด';
-}
-
-function pmQuickPrint() {
-  // ติ๊กทุกข้อก่อน แล้ว print ทันที
-  [1,2,3,4,5,6,7,8,9,10].forEach(n => { const el = document.getElementById('pm-c'+n); if(el) el.checked = true; });
-  const allBtn = document.querySelector('.pm-chk-all-btn'); if(allBtn) allBtn.textContent = '☑ ยกเลิกทั้งหมด';
-  pmPrintCheckSheet();
-}
-
-function pmPrintCheckSheet() {
-  const labels = ['ทำความสะอาดใบพัดและตัวเครื่อง','ทดสอบการทำงานหลังบำรุงรักษา','ตรวจสอบเสียงและการสั่นสะเทือนผิดปกติ','ตรวจสอบสายพานและการขันแน่น','ตรวจสอบตลับลูกปืน','ตรวจสอบแรงดันไฟฟ้าและกระแสไฟ','ทำความสะอาดกรองอากาศ (ถ้ามี)','ตรวจสอบการยึดแน่นของโครงสร้าง','ทดสอบระบบความปลอดภัย','บันทึกค่า RPM และอุณหภูมิ'];
-  const checked = [1,2,3,4,5,6,7,8,9,10].map(n => document.getElementById('pm-c'+n)?.checked || false);
-  const machineId = document.getElementById('pm-machineid')?.value || '';
-  const floorZone = (document.getElementById('pm-floor')?.value || '') + '/' + (document.getElementById('pm-zone')?.value || '');
-  const location  = document.getElementById('pm-location')?.value || '';
-  const model     = document.getElementById('pm-model')?.value || '';
-  const operator  = document.getElementById('pm-operator')?.value || '';
-  const today = new Date().toLocaleDateString('th-TH', {day:'2-digit',month:'2-digit',year:'numeric'});
-  const woNo = 'PM' + String(new Date().getFullYear()).slice(-2) + '-' + Math.floor(100000 + Math.random()*900000);
-
-  let rows = '';
-  labels.forEach((label, i) => {
-    const bg = i % 2 === 0 ? '#ffffff' : '#f7f9fc';
-    rows += '<tr style="background:'+bg+';">' +
-      '<td style="text-align:center;">'+(i+1)+'</td>' +
-      '<td style="padding:5px 8px;line-height:1.55;">'+label+'</td>' +
-      '<td style="text-align:center;">—</td>' +
-      '<td style="text-align:center;font-size:17px;">'+(checked[i]?'&#9745;':'&#9744;')+'</td>' +
-      '<td style="text-align:center;font-size:17px;">'+(checked[i]?'&#9744;':'&#9745;')+'</td>' +
-      '</tr>';
-  });
-
-  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>' +
-    'body{font-family:"Sarabun","TH Sarabun New",Arial,sans-serif;font-size:13px;margin:0;background:#f0f0f0;}' +
-    '.page{width:210mm;min-height:297mm;margin:10px auto;padding:12mm 14mm;box-sizing:border-box;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.15);}' +
-    '.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}' +
-    '.top-hospital{font-size:11.5px;color:#333;line-height:1.5;}' +
-    '.wo-badge{border:1.5px solid #1F4E79;padding:4px 12px;font-size:12px;font-weight:bold;color:#1F4E79;border-radius:3px;}' +
-    '.doc-title{text-align:center;font-size:19px;font-weight:bold;border:2px solid #1F4E79;padding:6px;margin-bottom:8px;color:#1F4E79;letter-spacing:1px;}' +
-    '.info-wrap{display:grid;grid-template-columns:1fr 1fr;border:1px solid #777;margin-bottom:8px;}' +
-    '.info-col{padding:7px 12px;}.info-col:first-child{border-right:1px solid #777;}' +
-    '.info-row{display:flex;align-items:flex-end;margin-bottom:4px;font-size:12px;}' +
-    '.lbl{font-weight:bold;width:115px;flex-shrink:0;color:#1F4E79;}' +
-    '.val{flex:1;border-bottom:1px solid #aaa;min-height:17px;padding-bottom:1px;padding-left:4px;}' +
-    '.time-table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:8px;}' +
-    '.time-table th{background:#2E75B6;color:#fff;border:1px solid #555;padding:5px;text-align:center;}' +
-    '.time-table td{border:1px solid #555;padding:7px 5px;text-align:center;}' +
-    '.chk-title{background:#1F4E79;color:#fff;font-weight:bold;padding:5px 10px;font-size:13px;}' +
-    'table.chk{width:100%;border-collapse:collapse;font-size:12px;}' +
-    'table.chk th{background:#2E75B6;color:#fff;border:1px solid #555;padding:5px 6px;text-align:center;}' +
-    'table.chk td{border:1px solid #555;padding:5px 6px;vertical-align:middle;}' +
-    '.summary-lbl{font-weight:bold;margin:8px 0 3px;}.summary-box{border:1px solid #555;min-height:72px;padding:6px;margin-bottom:10px;}' +
-    '.sign-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}' +
-    '.sign-card{border:1px solid #555;padding:8px 12px;text-align:center;}' +
-    '.sign-label{font-size:12px;font-weight:bold;color:#1F4E79;margin-bottom:28px;}' +
-    '.sign-line{border-top:1px solid #333;margin:0 10px 5px;}.sign-name{font-size:11px;color:#555;}' +
-    '.print-btn{position:fixed;bottom:18px;right:18px;background:#1F4E79;color:#fff;border:none;padding:12px 22px;font-size:14px;border-radius:8px;cursor:pointer;font-family:"Sarabun",Arial;box-shadow:0 4px 14px rgba(0,0,0,.3);z-index:9999;}' +
-    '.print-btn:hover{background:#2E75B6;}' +
-    '@media print{.print-btn{display:none!important;}.page{margin:0;box-shadow:none;padding:8mm 10mm;}}' +
-    '</style></head><body><div class="page">' +
-    '<div class="top-bar"><div class="top-hospital">อาคารภูมิสิริมังคลานุสรณ์<br>โรงพยาบาลจุฬาลงกรณ์  สภากาชาดไทย</div>' +
-    '<div class="wo-badge">'+woNo+'</div></div>' +
-    '<div class="doc-title">ใบสั่งงาน PM</div>' +
-    '<div class="info-wrap"><div class="info-col">' +
-    '<div class="info-row"><span class="lbl">Exhaust Air Fan :</span><span class="val">'+machineId+'</span></div>' +
-    '<div class="info-row"><span class="lbl">สถานที่ :</span><span class="val">'+floorZone+'</span></div>' +
-    '<div class="info-row"><span class="lbl">ชั้น/ห้อง :</span><span class="val">'+location+'</span></div>' +
-    '<div class="info-row"><span class="lbl">เครื่องจักร :</span><span class="val">พัดลมระบายอากาศ '+machineId+'</span></div>' +
-    '</div><div class="info-col">' +
-    '<div class="info-row"><span class="lbl">เลขที่ใบสั่งงาน :</span><span class="val">'+woNo+'</span></div>' +
-    '<div class="info-row"><span class="lbl">วันที่สั่งงาน :</span><span class="val">'+today+'</span></div>' +
-    '<div class="info-row"><span class="lbl">วันที่กำหนด :</span><span class="val">'+today+'</span></div>' +
-    '<div class="info-row"><span class="lbl">รุ่นเครื่อง :</span><span class="val">'+model+'</span></div>' +
-    '<div class="info-row"><span class="lbl">ชื่อของ PM :</span><span class="val">Preventive Maintenance</span></div>' +
-    '</div></div>' +
-    '<table class="time-table"><tr><th>วันที่แผน PM</th><th>แผนเสร็จงาน</th><th>รวมเวลา รวมผล (ชั่วโมง)</th><th>ผู้รับผิดชอบ</th></tr>' +
-    '<tr><td>'+today+'</td><td>'+today+'</td><td>0.00</td><td>'+operator+'</td></tr>' +
-    '<tr><th>วันที่ทำจริง</th><th>เวลาเริ่มจริง</th><th>รวมเวลา ทำงานจริง (ชั่วโมง)</th><th>ผู้ปฏิบัติงานจริง</th></tr>' +
-    '<tr><td style="height:22px;"></td><td></td><td></td><td></td></tr></table>' +
-    '<div class="chk-title">รายการตรวจสอบ</div>' +
-    '<table class="chk"><thead><tr><th style="width:36px;">ลำดับ</th><th>รายละเอียดการแก้ไข</th>' +
-    '<th style="width:70px;">ค่าเกณฑ์</th><th style="width:70px;">เสร็จ</th><th style="width:60px;">ไม่ได้</th>' +
-    '</tr></thead><tbody>'+rows+'</tbody></table>' +
-    '<div class="summary-lbl">สรุปการทำงาน</div><div class="summary-box"></div>' +
-    '<div class="sign-grid">' +
-    '<div class="sign-card"><div class="sign-label">ผู้ปฏิบัติงาน</div><div class="sign-line"></div><div class="sign-name">'+(operator ? '('+operator+')' : '(…………………………………)')+'</div></div>' +
-    '<div class="sign-card"><div class="sign-label">ผู้ตรวจสอบ</div><div class="sign-line"></div><div class="sign-name">(…………………………………)</div></div>' +
-    '</div></div>' +
-    '<button class="print-btn" onclick="window.print()">🖨️ พิมพ์ Check Sheet</button>' +
-    '</body></html>';
-
-  const w = window.open('', '_blank', 'width=960,height=750');
-  w.document.write(html);
-  w.document.close();
 }
 
 async function pmDoSubmit() {
