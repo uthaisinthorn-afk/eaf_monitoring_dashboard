@@ -13677,6 +13677,22 @@ function saveStatus() {
         asset_no:   assetToSend
       })
     }).catch(function(){});  // silent fail
+
+    // ── ส่งเข้า Firestore แบบคู่ขนาน (background) ──
+    if (window.firebaseDB) {
+      window.firestoreAddDoc(
+        window.firestoreCollection(window.firebaseDB, 'eaf_pm_logs'),
+        {
+          action:     'update_asset',
+          machine_id: machineIdToSend,
+          asset_no:   assetToSend,
+          work_status: selModalStatus,
+          system:     'EAF',
+          created_at: window.firestoreServerTimestamp()
+        }
+      ).then(function(){ console.log('✅ บันทึกลง Firestore สำเร็จ (eaf_pm_logs)'); })
+       .catch(function(e){ console.warn('Firestore sync failed:', e.message); });
+    }
   }
 
   overrides[selIdx] = selModalStatus;
@@ -14500,6 +14516,23 @@ async function pmDoSubmit() {
   } catch(e) {
     // Silent fail — data already saved locally
     console.warn('Google Sheets sync failed:', e.message);
+  }
+
+  // ── ส่งเข้า Firestore แบบคู่ขนาน (background, ไม่กระทบของเดิม) ──
+  try {
+    if (window.firebaseDB) {
+      await window.firestoreAddDoc(
+        window.firestoreCollection(window.firebaseDB, 'eaf_pm_logs'),
+        {
+          ...payload,
+          system: 'EAF',
+          created_at: window.firestoreServerTimestamp()
+        }
+      );
+      console.log('✅ บันทึกลง Firestore สำเร็จ (eaf_pm_logs)');
+    }
+  } catch(e) {
+    console.warn('Firestore sync failed:', e.message);
   }
 }
 
