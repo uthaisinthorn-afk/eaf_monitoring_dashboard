@@ -15784,4 +15784,35 @@ async function dtApiCall(payload) {
 }
 </script>
 
+<!-- ===== Firebase (stb-pm-system) ===== -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.7/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    addDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.1.7/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAkJq1tJ6k7px6RK_HjaVqTjI_spbcjoXo",
+    authDomain: "stb-pm-system.firebaseapp.com",
+    projectId: "stb-pm-system",
+    storageBucket: "stb-pm-system.firebasestorage.app",
+    messagingSenderId: "629248634578",
+    appId: "1:629248634578:web:cc22a69d575f8b2177470b"
+  };
+
+  const firebaseApp = initializeApp(firebaseConfig);
+  const db = getFirestore(firebaseApp);
+
+  // ทำให้ตัวแปรเหล่านี้เรียกใช้ได้จากโค้ดส่วนอื่นของหน้าเว็บ (นอก module)
+  window.firebaseDB = db;
+  window.firestoreCollection = collection;
+  window.firestoreAddDoc = addDoc;
+  window.firestoreServerTimestamp = serverTimestamp;
+
+  console.log("✅ Firebase (stb-pm-system) เชื่อมต่อสำเร็จ");
+</script>
+
 </body></html>
