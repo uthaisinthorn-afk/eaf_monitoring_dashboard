@@ -723,7 +723,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
     <!-- DAILY TAB -->
     <div id="kpi-panel-daily">
       <div class="kpi-filters">
-        <input type="date" id="kpi-daily-date" onchange="kpiRenderDaily()">
+        <input type="date" id="kpi-daily-date" onchange="kpiLoadData(false)">
         <select id="kpi-daily-floor" onchange="kpiRenderDaily()"><option value="">ทุกชั้น</option></select>
         <select id="kpi-daily-zone" onchange="kpiRenderDaily()"><option value="">ทุกโซน</option></select>
         <button class="btn-add-user" onclick="kpiLoadData(true)">🔄 รีเฟรชข้อมูล</button>
@@ -734,7 +734,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
     <!-- MONTHLY TAB -->
     <div id="kpi-panel-monthly" class="hidden">
       <div class="kpi-filters">
-        <input type="month" id="kpi-monthly-month" onchange="kpiRenderMonthly()">
+        <input type="month" id="kpi-monthly-month" onchange="kpiLoadData(false)">
         <select id="kpi-monthly-floor" onchange="kpiRenderMonthly()"><option value="">ทุกชั้น</option></select>
         <select id="kpi-monthly-zone" onchange="kpiRenderMonthly()"><option value="">ทุกโซน</option></select>
         <button class="btn-add-user" onclick="kpiLoadData(true)">🔄 รีเฟรชข้อมูล</button>
@@ -13677,22 +13677,6 @@ function saveStatus() {
         asset_no:   assetToSend
       })
     }).catch(function(){});  // silent fail
-
-    // ── ส่งเข้า Firestore แบบคู่ขนาน (background) ──
-    if (window.firebaseDB) {
-      window.firestoreAddDoc(
-        window.firestoreCollection(window.firebaseDB, 'eaf_pm_logs'),
-        {
-          action:     'update_asset',
-          machine_id: machineIdToSend,
-          asset_no:   assetToSend,
-          work_status: selModalStatus,
-          system:     'EAF',
-          created_at: window.firestoreServerTimestamp()
-        }
-      ).then(function(){ console.log('✅ บันทึกลง Firestore สำเร็จ (eaf_pm_logs)'); })
-       .catch(function(e){ console.warn('Firestore sync failed:', e.message); });
-    }
   }
 
   overrides[selIdx] = selModalStatus;
@@ -14517,23 +14501,6 @@ async function pmDoSubmit() {
     // Silent fail — data already saved locally
     console.warn('Google Sheets sync failed:', e.message);
   }
-
-  // ── ส่งเข้า Firestore แบบคู่ขนาน (background, ไม่กระทบของเดิม) ──
-  try {
-    if (window.firebaseDB) {
-      await window.firestoreAddDoc(
-        window.firestoreCollection(window.firebaseDB, 'eaf_pm_logs'),
-        {
-          ...payload,
-          system: 'EAF',
-          created_at: window.firestoreServerTimestamp()
-        }
-      );
-      console.log('✅ บันทึกลง Firestore สำเร็จ (eaf_pm_logs)');
-    }
-  } catch(e) {
-    console.warn('Firestore sync failed:', e.message);
-  }
 }
 
 // ─── KPI PANEL ───────────────────────────────────────────
@@ -14605,14 +14572,27 @@ function kpiPopulateFilterSelects() {
 
 async function kpiLoadData(force) {
   if (kpiLoading) return;
-  if (kpiLoaded && !force) return;
+
+  const dateEl = document.getElementById('kpi-daily-date');
+  const monthEl = document.getElementById('kpi-monthly-month');
+  const date = dateEl ? dateEl.value : '';
+  const month = monthEl ? monthEl.value : '';
+  // ดึงเฉพาะช่วงที่กำลังดูอยู่ (tab ปัจจุบัน) เพื่อลดปริมาณข้อมูลที่ GAS ต้องส่งกลับ
+  const scopeVal = kpiTab === 'monthly' ? month : date;
+  if (!scopeVal) { kpiRenderDaily(); kpiRenderMonthly(); return; }
+  const cacheKey = kpiTab + ':' + scopeVal;
+  if (kpiLoaded === cacheKey && !force) return;
+
   kpiLoading = true;
   const dailyBody = document.getElementById('kpi-daily-body');
   const monthlyBody = document.getElementById('kpi-monthly-body');
   if (dailyBody) dailyBody.innerHTML = '<div class="kpi-loading">กำลังโหลดข้อมูล...</div>';
   if (monthlyBody) monthlyBody.innerHTML = '<div class="kpi-loading">กำลังโหลดข้อมูล...</div>';
   try {
-    const res = await fetch(GS_URL + '?action=getLogs', { cache: 'no-store' });
+    const qParam = kpiTab === 'monthly'
+      ? ('month=' + encodeURIComponent(month))
+      : ('date=' + encodeURIComponent(date));
+    const res = await fetch(GS_URL + '?action=getLogs&' + qParam, { cache: 'no-store' });
     const json = await res.json();
     kpiLogsRaw = (json.logs || []).map(log => {
       const date = kpiNormDate(log.date);
@@ -14626,10 +14606,11 @@ async function kpiLoadData(force) {
         zone: (log.zone || (loc ? loc.zone : '') || '').trim()
       };
     }).filter(l => l.date && l.machineId && l.statusKey);
-    kpiLoaded = true;
+    kpiLoaded = cacheKey;
   } catch (e) {
     console.warn('kpiLoadData error:', e.message);
     kpiLogsRaw = kpiLogsRaw || [];
+    kpiLoaded = null;
   }
   kpiLoading = false;
   kpiRenderDaily();
@@ -14668,6 +14649,7 @@ function kpiSwitchTab(tab) {
   document.getElementById('kpi-tab-monthly').classList.toggle('act', tab === 'monthly');
   document.getElementById('kpi-panel-daily').classList.toggle('hidden', tab !== 'daily');
   document.getElementById('kpi-panel-monthly').classList.toggle('hidden', tab !== 'monthly');
+  kpiLoadData(false); // โหลดข้อมูลของ tab นี้ถ้ายังไม่เคยโหลด (ใช้ cache ถ้าโหลดแล้ว)
 }
 
 function openKPIPanel() {
@@ -15815,37 +15797,6 @@ async function dtApiCall(payload) {
   });
   return res.json();
 }
-</script>
-
-<!-- ===== Firebase (stb-pm-system) ===== -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-  import {
-    getFirestore,
-    collection,
-    addDoc,
-    serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyAkJq1tJ6k7px6RK_HjaVqTjI_spbcjoXo",
-    authDomain: "stb-pm-system.firebaseapp.com",
-    projectId: "stb-pm-system",
-    storageBucket: "stb-pm-system.firebasestorage.app",
-    messagingSenderId: "629248634578",
-    appId: "1:629248634578:web:cc22a69d575f8b2177470b"
-  };
-
-  const firebaseApp = initializeApp(firebaseConfig);
-  const db = getFirestore(firebaseApp);
-
-  // ทำให้ตัวแปรเหล่านี้เรียกใช้ได้จากโค้ดส่วนอื่นของหน้าเว็บ (นอก module)
-  window.firebaseDB = db;
-  window.firestoreCollection = collection;
-  window.firestoreAddDoc = addDoc;
-  window.firestoreServerTimestamp = serverTimestamp;
-
-  console.log("✅ Firebase (stb-pm-system) เชื่อมต่อสำเร็จ");
 </script>
 
 </body></html>
