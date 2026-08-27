@@ -538,6 +538,16 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
   padding:4px 10px;cursor:pointer;margin-left:8px;flex-shrink:0;
   display:inline-flex;align-items:center;gap:4px;transition:all .15s;}
 .floor-map-btn:hover{background:rgba(0,229,255,.18);box-shadow:0 0 10px rgba(0,229,255,.3);}
+.floor-model-summary{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+.fms-item{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;font-size:11px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.15);color:#cfd8dc;white-space:nowrap;}
+.fms-item b{font-weight:800;}
+.fms-item.ring-pink{border-color:#ff4fa3;color:#ff4fa3;}
+.fms-item.ring-orange{border-color:#ff9800;color:#ff9800;}
+.fms-item.ring-purple{border-color:#a259ff;color:#a259ff;}
+.fms-item.ring-white{border-color:#ffffff;color:#ffffff;}
+.fms-item.ring-blue{border-color:#29b6ff;color:#29b6ff;}
+.fms-item.ring-green{border-color:#4dff88;color:#4dff88;}
 .fovm-modal{position:fixed;inset:0;background:#000;z-index:10000;display:none;flex-direction:column;font-family:'Sarabun',sans-serif;}
 .fovm-modal.open{display:flex;}
 .fovm-topbar{background:#060606;border-bottom:1px solid #1a2a1a;padding:10px 16px;
@@ -13530,6 +13540,32 @@ function render() {
     if (!floorCount) return;
     visible += floorCount;
 
+    // สรุปจำนวนพัดลมแยกตามรุ่น ในชั้นนี้ (หลังกรองแล้ว)
+    const modelCounts = {};
+    zonesSorted.forEach(zn => {
+      if (filter.zone && filter.zone !== zn) return;
+      const indices = zones[zn];
+      if (!indices) return;
+      indices.filter(i => passFilter(i)).forEach(i => {
+        const mRaw = (RAW[i][3] || '').trim();
+        const key = mRaw.toUpperCase() || 'ไม่ระบุรุ่น';
+        modelCounts[key] = (modelCounts[key] || 0) + 1;
+      });
+    });
+    const MODEL_ORDER = ['250X', '160X', '250D', '225D', '200D'];
+    const modelKeys = Object.keys(modelCounts).sort((a, b) => {
+      const ia = MODEL_ORDER.indexOf(a), ib = MODEL_ORDER.indexOf(b);
+      if (ia !== -1 && ib !== -1) return ia - ib;
+      if (ia !== -1) return -1;
+      if (ib !== -1) return 1;
+      return a.localeCompare(b);
+    });
+    const modelSummaryHTML = modelKeys.length
+      ? `<div class="floor-model-summary">${modelKeys.map(k =>
+          `<span class="fms-item ${getModelRingClass(k)}">${k} <b>${modelCounts[k]}</b> ตัว</span>`
+        ).join('')}</div>`
+      : '';
+
     const overviewBtn = FLOOR_OVERVIEW_MAPS[fl]
       ? `<button class="floor-map-btn" onclick="event.stopPropagation();openFloorOverviewMap('${fl}')" title="แผนที่รวมชั้น ${fl}">🗺️ แผนที่ชั้น</button>`
       : '';
@@ -13537,6 +13573,7 @@ function render() {
       <div class="floor-hdr" onclick="togFloor('${fl}')">
         <div class="floor-lbl">ชั้น ${fl}</div>
         ${overviewBtn}
+        ${modelSummaryHTML}
         <div class="floor-div"></div>
         <div class="floor-cnt">${floorCount} เครื่อง</div>
         <div class="floor-tog" id="ft-${fl}">▾</div>
