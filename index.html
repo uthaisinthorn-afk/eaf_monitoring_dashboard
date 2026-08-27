@@ -532,23 +532,6 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
   padding:9px 14px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;}
 .btn-map-view:hover{background:rgba(0,255,80,.15);box-shadow:0 0 14px rgba(0,255,80,.25);}
 
-/* ── FLOOR OVERVIEW MAP: ปุ่ม + modal แสดงภาพรวมแผนผังทั้งชั้น ── */
-.floor-map-btn{background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.3);color:#00e5ff;
-  border-radius:6px;font-family:'Sarabun',sans-serif;font-size:11px;font-weight:700;
-  padding:4px 10px;cursor:pointer;margin-left:8px;flex-shrink:0;
-  display:inline-flex;align-items:center;gap:4px;transition:all .15s;}
-.floor-map-btn:hover{background:rgba(0,229,255,.18);box-shadow:0 0 10px rgba(0,229,255,.3);}
-.fovm-modal{position:fixed;inset:0;background:#000;z-index:10000;display:none;flex-direction:column;font-family:'Sarabun',sans-serif;}
-.fovm-modal.open{display:flex;}
-.fovm-topbar{background:#060606;border-bottom:1px solid #1a2a1a;padding:10px 16px;
-  display:flex;align-items:center;gap:12px;flex-shrink:0;}
-.fovm-topbar h2{color:#00e5ff;font-size:14px;font-weight:600;flex:1;margin:0;}
-.fovm-close{background:#111;border:1px solid #333;color:#aaa;
-  padding:7px 16px;border-radius:6px;font-size:12px;cursor:pointer;transition:all .15s;}
-.fovm-close:hover{border-color:#555;color:#fff;}
-.fovm-body{flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;background:#000;padding:8px;}
-.fovm-body img{max-width:100%;height:auto;display:block;}
-
 /* ── MAP FULLSCREEN MODAL ── */
 .map-modal-full{position:fixed;inset:0;background:#000;z-index:9999;display:none;flex-direction:column;font-family:'Sarabun',sans-serif;}
 .map-modal-full.open{display:flex;}
@@ -13530,13 +13513,9 @@ function render() {
     if (!floorCount) return;
     visible += floorCount;
 
-    const overviewBtn = FLOOR_OVERVIEW_MAPS[fl]
-      ? `<button class="floor-map-btn" onclick="event.stopPropagation();openFloorOverviewMap('${fl}')" title="แผนที่รวมชั้น ${fl}">🗺️ แผนที่ชั้น</button>`
-      : '';
     parts.push(`<div class="floor-panel" id="fp-${fl}">
       <div class="floor-hdr" onclick="togFloor('${fl}')">
         <div class="floor-lbl">ชั้น ${fl}</div>
-        ${overviewBtn}
         <div class="floor-div"></div>
         <div class="floor-cnt">${floorCount} เครื่อง</div>
         <div class="floor-tog" id="ft-${fl}">▾</div>
@@ -15270,40 +15249,6 @@ var FLOOR_COORDS = {
   "MZ": {"2EF-M/4R": {"x": 34.43, "y": 42.19, "part": "5EC"}, "2EF-M/5R": {"x": 41.21, "y": 39.18, "part": "5EC"}, "2EF-M/6R": {"x": 44.93, "y": 39.86, "part": "5EC"}, "2EF-M/7R": {"x": 51.54, "y": 39.3, "part": "5EC"}, "2EF-M/8R": {"x": 54.09, "y": 40.1, "part": "5EC"}, "2EF-M/9R": {"x": 60.32, "y": 39.55, "part": "5EC"}, "2EF-M/10R": {"x": 64.13, "y": 39.17, "part": "5EC"}, "2EF-M/11R": {"x": 73.53, "y": 39.96, "part": "5EC"}, "2EF-M/19R": {"x": 54.75, "y": 31.9, "part": "5EC"}, "2EF-M/20R": {"x": 57.48, "y": 36.08, "part": "5EC"}, "2EF-M/21R": {"x": 55.6, "y": 33.87, "part": "5EC"}, "2EF-M/22R": {"x": 51.63, "y": 35.27, "part": "5EC"}, "2EF-M/23R": {"x": 46.36, "y": 35.57, "part": "5EC"}, "2EF-M/24R": {"x": 42.81, "y": 34.75, "part": "5EC"}, "2EF-M/18R": {"x": 55.23, "y": 32.49, "part": "5EC"}, "2EF-M/12R": {"x": 80.8, "y": 38.72, "part": "5EC"}, "2EF-M/3R": {"x": 36.88, "y": 34.98, "part": "5EC"}, "2EF-M/2R": {"x": 32.8, "y": 33.89, "part": "5EC"}, "2EF-M/16R": {"x": 59.14, "y": 29.22, "part": "5EC"}, "2EF-M/17R": {"x": 55.92, "y": 30.45, "part": "5EC"}, "2EF-M/25R": {"x": 44.4, "y": 31.55, "part": "5EC"}, "2EF-M/26R": {"x": 45.38, "y": 29.33, "part": "5EC"}, "2EF-M/14R": {"x": 80.54, "y": 28.27, "part": "5EC"}, "2EF-M/15R": {"x": 80.04, "y": 26.86, "part": "5EC"}, "2EF-M/1R": {"x": 38.5, "y": 16.6, "part": "5EC"}, "1EF-M/2R": {"x": 35.62, "y": 4.66, "part": "4"}, "1EF-M/10R": {"x": 15.95, "y": 19.57, "part": "4"}, "1EF-M/13R": {"x": 38.39, "y": 20.92, "part": "4"}, "1EF-M/12R": {"x": 33.96, "y": 16.16, "part": "4"}, "1EF-M/9R": {"x": 12.95, "y": 16.73, "part": "4"}, "1EF-M/4R": {"x": 31.88, "y": 6.4, "part": "4"}, "1EF-M/3R": {"x": 31.82, "y": 4.57, "part": "4"}, "1EF-M/6R": {"x": 30.19, "y": 8.39, "part": "4"}, "1EF-M/7R": {"x": 17.61, "y": 4.55, "part": "4"}, "1EF-M/5R": {"x": 28.67, "y": 4.55, "part": "4"}, "1EF-M/14R": {"x": 42.11, "y": 17.04, "part": "4"}, "1EF-M/15R": {"x": 50.72, "y": 28.21, "part": "4"}, "1EF-M/16R": {"x": 50.12, "y": 29.55, "part": "4"}, "1EF-M/17R": {"x": 46.57, "y": 31.69, "part": "4"}, "1EF-M/18R": {"x": 36.47, "y": 31.44, "part": "4"}, "1EF-M/19R": {"x": 35.2, "y": 33.33, "part": "4"}, "1EF-M/20R": {"x": 33.03, "y": 29.74, "part": "4"}, "1EF-M/21R": {"x": 27.53, "y": 26.24, "part": "4"}, "1EF-M/22R": {"x": 24.01, "y": 31.39, "part": "4"}, "1EF-M/23R": {"x": 23.91, "y": 33.51, "part": "4"}, "1EF-M/24R": {"x": 24.18, "y": 28.74, "part": "4"}, "1EF-M/25R": {"x": 19.16, "y": 30.43, "part": "4"}, "1EF-M/26R": {"x": 19.69, "y": 33.39, "part": "4"}, "1EF-M/27R": {"x": 12.18, "y": 33.21, "part": "4"}, "1EF-M/1": {"x": 33.08, "y": 10.63, "part": "2"}, "1EF-M/2": {"x": 31.93, "y": 12.96, "part": "2"}, "1EF-M/3": {"x": 32.03, "y": 14.55, "part": "2"}, "1EF-M/4": {"x": 27.49, "y": 12.96, "part": "2"}, "1EF-M/5": {"x": 27.23, "y": 10.85, "part": "2"}, "1EF-M/6": {"x": 13.37, "y": 11.95, "part": "2"}, "1EF-M/7": {"x": 14.12, "y": 10.24, "part": "2"}, "1EF-M/68": {"x": 25.66, "y": 20.04, "part": "2"}, "1EF-M/69": {"x": 21.57, "y": 13.81, "part": "2"}, "1EF-M/70": {"x": 19.53, "y": 12.22, "part": "2"}, "1EF-M/9": {"x": 21.7, "y": 14.9, "part": "2"}, "1EF-M/10": {"x": 21.78, "y": 16.11, "part": "2"}, "1EF-M/28R": {"x": 37.49, "y": 32.52, "part": "3"}, "1EF-M/29R": {"x": 32.91, "y": 34.43, "part": "3"}, "1EF-M/30R": {"x": 17.39, "y": 34.67, "part": "3"}, "1EF-M/31R": {"x": 34.47, "y": 20.16, "part": "3"}, "1EF-M/32R": {"x": 35.03, "y": 17.39, "part": "3"}, "1EF-M/34R": {"x": 37.7, "y": 5.79, "part": "3"}, "1EF-M/35R": {"x": 34.37, "y": 5.91, "part": "3"}, "1EF-M/36R": {"x": 22.29, "y": 5.64, "part": "3"}, "1EF-M/8R": {"x": 46.99, "y": 38.12, "part": "1"}}
 };
 
-// ── FLOOR_OVERVIEW_MAPS: ภาพรวมแผนผังทั้งชั้น (ต่อภาพหลายส่วน + ปักหมุดสีตามรุ่นเครื่องแล้ว) ──
-// ใช้แสดงเวลากดปุ่ม "🗺️ แผนที่ชั้น" ในหัวข้อแต่ละชั้น ต่างจาก FLOOR_IMAGE_FILES ที่เป็นภาพดิบรายส่วน
-// เก็บแค่ชื่อไฟล์ (ไม่ต้องใส่ "floors/" นำหน้า — โค้ดจะเติมให้เอง เหมือน getFloorImageSrc)
-// เพิ่มชั้นใหม่ได้โดยเพิ่มบรรทัดในนี้ทีละชั้น เช่น "2": "floor2_overview.png"
-var FLOOR_OVERVIEW_MAPS = {
-  "1": "floor1_overview.png",
-  "2": "floor2_overview.png",
-  "3": "floor3_overview.png",
-  "4": "floor4_overview.png",
-  "5": "floor5_overview.png",
-  "6": "floor6_overview.png",
-  "7": "floor7_overview.png",
-  "8": "floor8_overview.png",
-  "9": "floor9_overview.png",
-  "10": "floor10_overview.png",
-  "11": "floor11_overview.png",
-  "12": "floor12_overview.png",
-  "13": "floor13_overview.png",
-  "20": "floor20_overview.png",
-  "21": "floor21_overview.png",
-  "22": "floor22_overview.png",
-  "23": "floor23_overview.png",
-  "24": "floor24_overview.png",
-  "25": "floor25_overview.png",
-  "26": "floor26_overview.png",
-  "27": "floor27_overview.png",
-  "28": "floor28_overview.png",
-  "B1": "floorB1_overview.png",
-  "B2": "floorB2_overview.png",
-  "B3": "floorB3_overview.png",
-  "B4": "floorB4_overview.png",
-  "MZ": "floorMZ_overview.png"
-};
-
 // ── getFloorImageSrc: หาไฟล์ภาพแผนผังที่ถูกต้อง ─────────────────────────
 // รองรับ 2 แบบ:
 //  1) FLOOR_IMAGE_FILES[floor] เป็น string  → ชั้นนั้นใช้ภาพเดียวทั้งชั้น (ของเดิม เช่น ชั้น 3,4,5)
@@ -15409,21 +15354,6 @@ function openMapFull() {
 function closeMapFull() {
   document.getElementById('mapModalFull').classList.remove('open');
   if (typeof _pickMode !== 'undefined' && _pickMode) togglePickMode();
-}
-
-// ─────────────────────────────────────────────────────────────
-// FLOOR OVERVIEW MAP — แสดงภาพรวมแผนผังทั้งชั้น (ทุกเครื่องปักหมุดสีตามรุ่นแล้ว)
-// เรียกจากปุ่ม "🗺️ แผนที่ชั้น" ที่หัวข้อแต่ละชั้นในรายการซ้าย
-// ─────────────────────────────────────────────────────────────
-function openFloorOverviewMap(floor) {
-  const file = FLOOR_OVERVIEW_MAPS[floor];
-  if (!file) { showToast('⚠️ ยังไม่มีแผนที่รวมสำหรับชั้นนี้', 'warn'); return; }
-  document.getElementById('fovmTitle').textContent = '🗺️ แผนที่ชั้น ' + floor;
-  document.getElementById('fovmImg').src = 'floors/' + file;
-  document.getElementById('fovmModal').classList.add('open');
-}
-function closeFloorOverviewMap() {
-  document.getElementById('fovmModal').classList.remove('open');
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -15775,17 +15705,6 @@ function showLocationSheetPreview() {
 
 </script>
 
-
-<!-- ── FLOOR OVERVIEW MAP MODAL — ภาพรวมแผนผังทั้งชั้น ── -->
-<div class="fovm-modal" id="fovmModal">
-  <div class="fovm-topbar">
-    <h2 id="fovmTitle">🗺️ แผนที่ชั้น</h2>
-    <button class="fovm-close" onclick="closeFloorOverviewMap()">✕ ปิด</button>
-  </div>
-  <div class="fovm-body">
-    <img id="fovmImg" src="" alt="แผนที่รวมชั้น">
-  </div>
-</div>
 
 <!-- ── MAP FULLSCREEN MODAL ── -->
 <div class="map-modal-full" id="mapModalFull">
