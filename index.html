@@ -284,6 +284,10 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .btn-mclose{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;
   font-family:'Sarabun',sans-serif;font-size:13px;padding:11px 14px;cursor:pointer;transition:all .15s;}
 .btn-mclose:hover{color:var(--text);border-color:var(--muted);}
+.btn-defect{background:rgba(255,110,0,.08);border:1px solid rgba(255,110,0,.35);color:#ff9248;
+  border-radius:8px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;
+  padding:11px 16px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;}
+.btn-defect:hover{background:rgba(255,110,0,.16);box-shadow:0 0 14px rgba(255,110,0,.25);}
 
 /* ── LEGEND ── */
 .legend{display:flex;gap:14px;flex-wrap:wrap;padding:8px 20px;border-top:1px solid var(--border);
@@ -13085,6 +13089,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
       <button class="btn-save" onclick="saveStatus()">💾 บันทึกสถานะ</button>
       <button class="btn-open-pm" onclick="openPMForm()">📋 แบบฟอร์ม PM</button>
       <button class="btn-map-view" onclick="openMapFull()">🗺 แผนที่</button>
+      <button class="btn-defect" onclick="openDefectForm()">🛠️ DEFECT</button>
       <button class="btn-mclose" onclick="closeModal()">ปิด</button>
     </div>
   </div>
@@ -13308,6 +13313,75 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
     <button class="pm-print-btn" id="pm-print-location-btn" onclick="showLocationSheetPreview()" style="display:none;">🖨️ พิมพ์ใบตำแหน่งติดตั้ง</button>
     <button class="pm-print-btn" id="pm-doctrack-btn" onclick="pmOpenDocTracking()" style="display:none;border-color:rgba(0,229,255,.6);">📋 ส่งเอกสารตรวจสอบ (AI Check)</button>
     <button class="pm-submit-btn" id="pm-submit-btn" onclick="pmDoSubmit()" disabled="">✅ ส่งสำเร็จ!</button>
+  </div>
+</div>
+
+<div id="defect-overlay" onclick="closeDefectPanel()" class=""></div>
+<div id="defect-panel" class="">
+  <div class="pm-head">
+    <div class="pm-head-title">
+      <h2>🛠️ แจ้งปัญหา (DEFECT)</h2>
+      <p id="defect-machine-label">1EF-21/20 — ห้องน้ำ-2</p>
+    </div>
+    <button class="pm-close-btn" onclick="closeDefectPanel()">✕</button>
+  </div>
+  <div class="pm-body">
+    <div class="pm-section">
+      <label>ระดับความเร่งด่วน</label>
+      <div class="pm-status-row">
+        <button class="pm-st-btn ok" onclick="defectSetUrgency('ต่ำ',this)"><span class="pm-si">🟢</span>ต่ำ</button>
+        <button class="pm-st-btn un" onclick="defectSetUrgency('ปานกลาง',this)"><span class="pm-si">🟡</span>ปานกลาง</button>
+        <button class="pm-st-btn br" onclick="defectSetUrgency('สูง',this)"><span class="pm-si">🟠</span>สูง</button>
+        <button class="pm-st-btn br" onclick="defectSetUrgency('ด่วนมาก',this)"><span class="pm-si">🔴</span>ด่วนมาก</button>
+      </div>
+    </div>
+
+    <div class="pm-section">
+      <label>ผู้แจ้ง</label>
+      <select class="pm-select" id="defect-reporter">
+        <option value="">-- เลือก --</option>
+        <option>อุทัย</option><option>อดิศักดิ์</option><option>วิรัตน์</option>
+        <option>ปฏิภาณ</option><option>ยุทธชัย</option><option>ปภัสรา</option>
+        <option>พรพรหม</option><option>เกียรติศักดิ์</option><option>ภัทธดล</option>
+      </select>
+    </div>
+
+    <div class="pm-section">
+      <label>รายละเอียดปัญหา</label>
+      <textarea class="pm-note" id="defect-detail" placeholder="อธิบายปัญหาที่พบ เช่น เสียงดังผิดปกติ, ใบพัดไม่หมุน, สายไฟหลุด ฯลฯ" style="min-height:90px;"></textarea>
+    </div>
+
+    <hr class="pm-divider">
+    <div class="pm-section" id="defect-photo-section">
+      <label>📷 รูปประกอบปัญหา (ถ้ามี)</label>
+      <div class="pm-photo-list">
+        <div class="pm-photo-card" id="defect-slot-0">
+          <div class="pm-photo-card-head">
+            <span class="card-icon">🛠️</span>
+            <span class="card-title">สภาพปัญหา</span>
+            <button class="card-del" onclick="defectPhotoClear(event)">🗑</button>
+          </div>
+          <div class="pm-photo-card-body">
+            <div class="pm-photo-placeholder">🛠️</div>
+            <img class="pm-photo-thumb" id="defect-preview-0" src="" alt="">
+            <div class="pm-photo-btns">
+              <button class="pm-photo-btn" onclick="defectPhotoCamera()">
+                <span class="btn-ico">📷</span><span class="btn-txt">กล้อง</span>
+              </button>
+              <button class="pm-photo-btn" onclick="defectPhotoGallery()">
+                <span class="btn-ico">🖼</span><span class="btn-txt">อัปโหลด</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pm-photo-status" id="defect-photo-status"></div>
+      <input type="file" id="defect-cam-0" accept="image/*" capture="environment" style="display:none;" onchange="defectPhotoSelected(this)">
+      <input type="file" id="defect-gal-0" accept="image/*" style="display:none;" onchange="defectPhotoSelected(this)">
+    </div>
+  </div>
+  <div class="pm-foot">
+    <button class="pm-submit-btn" id="defect-submit-btn" onclick="defectDoSubmit()">🛠️ บันทึกการแจ้งปัญหา</button>
   </div>
 </div>
 
@@ -13714,6 +13788,131 @@ function cancelPM() {
   document.getElementById('pmBanner').classList.add('hidden');
   render();
   showToast('ยกเลิก PM Mode แล้ว');
+}
+
+// ─── DEFECT FORM (แจ้งปัญหา/ตำหนิ) ─────────────────────────
+var defectSelIdx = null;
+var defectUrgency = null;
+var defectPhoto = null;
+
+function openDefectForm() {
+  if (selIdx === null) return;
+  defectSelIdx = selIdx;
+  const r = RAW[defectSelIdx];
+  closeModal();
+
+  document.getElementById('defect-machine-label').textContent = r[0] + (r[4] ? ' — ' + r[4] : '');
+  document.getElementById('defect-reporter').value = '';
+  document.getElementById('defect-detail').value = '';
+  document.querySelectorAll('#defect-panel .pm-st-btn').forEach(b => b.classList.remove('sel'));
+  defectUrgency = null;
+  defectPhotoClear();
+  document.getElementById('defect-submit-btn').textContent = '🛠️ บันทึกการแจ้งปัญหา';
+  document.getElementById('defect-submit-btn').disabled = false;
+
+  document.getElementById('defect-overlay').classList.add('show');
+  document.getElementById('defect-panel').classList.add('show');
+}
+
+function closeDefectPanel() {
+  document.getElementById('defect-overlay').classList.remove('show');
+  document.getElementById('defect-panel').classList.remove('show');
+}
+
+function defectSetUrgency(val, el) {
+  document.querySelectorAll('#defect-panel .pm-st-btn').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  defectUrgency = val;
+}
+
+function defectPhotoCamera() {
+  const fi = document.getElementById('defect-cam-0');
+  fi.value = ''; fi.click();
+}
+function defectPhotoGallery() {
+  const fi = document.getElementById('defect-gal-0');
+  fi.value = ''; fi.click();
+}
+function defectPhotoClear(e) {
+  if (e) e.stopPropagation();
+  defectPhoto = null;
+  const preview = document.getElementById('defect-preview-0');
+  if (preview) preview.src = '';
+  const slot = document.getElementById('defect-slot-0');
+  if (slot) slot.classList.remove('has-img');
+  ['defect-cam-0','defect-gal-0'].forEach(id => {
+    const fi = document.getElementById(id);
+    if (fi) fi.value = '';
+  });
+  defectPhotoStatus('');
+}
+function defectPhotoStatus(msg, type='') {
+  const el = document.getElementById('defect-photo-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'pm-photo-status' + (type ? ' ' + type : '');
+}
+function defectPhotoSelected(input) {
+  const file = input.files[0];
+  if (!file) return;
+  defectPhotoStatus('⏳ กำลังบีบอัดรูป...', 'uploading');
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const img = new Image();
+    img.onload = function() {
+      let w = img.width, h = img.height;
+      if (w > PHOTO_MAX_W) { h = Math.round(h * PHOTO_MAX_W / w); w = PHOTO_MAX_W; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const b64 = canvas.toDataURL('image/jpeg', PHOTO_QUALITY);
+      defectPhoto = b64;
+      const preview = document.getElementById('defect-preview-0');
+      if (preview) preview.src = b64;
+      const slot = document.getElementById('defect-slot-0');
+      if (slot) slot.classList.add('has-img');
+      const kb = Math.round(b64.length * 0.75 / 1024);
+      defectPhotoStatus('✅ แนบรูปแล้ว — ' + kb + ' KB', 'done');
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function defectDoSubmit() {
+  if (defectSelIdx === null) return;
+  if (!document.getElementById('defect-reporter').value) { alert('⚠️ กรุณาเลือก ผู้แจ้ง'); return; }
+  if (!defectUrgency) { alert('⚠️ กรุณาเลือก ระดับความเร่งด่วน'); return; }
+  if (!document.getElementById('defect-detail').value.trim()) { alert('⚠️ กรุณากรอก รายละเอียดปัญหา'); document.getElementById('defect-detail').focus(); return; }
+
+  const btn = document.getElementById('defect-submit-btn');
+  btn.textContent = '⏳ กำลังบันทึก...'; btn.disabled = true;
+
+  const r = RAW[defectSelIdx];
+  const payload = {
+    action:      'log_defect',
+    machine_id:  r[0] || '',
+    floor:       r[6] || '',
+    zone:        r[5] || '',
+    location:    r[4] || '',
+    detail:      document.getElementById('defect-detail').value.trim(),
+    reporter:    document.getElementById('defect-reporter').value,
+    urgency:     defectUrgency,
+    photo:       defectPhoto || ''
+  };
+
+  showToast('🛠️ บันทึกการแจ้งปัญหาแล้ว');
+  setTimeout(() => { closeDefectPanel(); btn.textContent = '🛠️ บันทึกการแจ้งปัญหา'; btn.disabled = false; }, 600);
+
+  try {
+    await fetch(GS_PM, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+  } catch(e) {
+    console.warn('Google Sheets sync failed (defect):', e.message);
+  }
 }
 
 // ─── FLOOR OVERVIEW MAP: แผนที่รวมชั้น (ภาพนิ่งแยกตามรุ่น) ───
