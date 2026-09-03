@@ -122,9 +122,16 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .fkey.ok:hover{box-shadow:0 5px 0 var(--ok-shd),0 6px 18px rgba(0,0,0,.5),0 0 20px rgba(0,255,80,.5),inset 0 1px 0 rgba(255,255,255,.1);}
 .fkey.ok:active{transform:translateY(3px);box-shadow:0 2px 0 var(--ok-shd),0 3px 6px rgba(0,0,0,.6),0 0 8px rgba(0,255,80,.3),inset 0 1px 0 rgba(255,255,255,.05);}
 .fkey.broken{background:linear-gradient(180deg,var(--br-top),var(--br-mid));border:1.5px solid var(--br-bdr);
-  box-shadow:0 5px 0 var(--br-shd),0 6px 10px rgba(0,0,0,.6),0 0 14px var(--br-glow),inset 0 1px 0 rgba(255,255,255,.06);}
-.fkey.broken:hover{box-shadow:0 5px 0 var(--br-shd),0 6px 18px rgba(0,0,0,.5),0 0 22px rgba(255,50,50,.55),inset 0 1px 0 rgba(255,255,255,.08);}
-.fkey.broken:active{transform:translateY(3px);box-shadow:0 2px 0 var(--br-shd),0 3px 6px rgba(0,0,0,.6);}
+  box-shadow:0 5px 0 var(--br-shd),0 6px 10px rgba(0,0,0,.6),0 0 14px var(--br-glow),inset 0 1px 0 rgba(255,255,255,.06);
+  animation:blinkRedCard .8s infinite;}
+@keyframes blinkRedCard{
+  0%,100%{background:linear-gradient(180deg,var(--br-top),var(--br-mid));
+    box-shadow:0 5px 0 var(--br-shd),0 6px 10px rgba(0,0,0,.6),0 0 14px var(--br-glow),inset 0 1px 0 rgba(255,255,255,.06);}
+  50%{background:linear-gradient(180deg,#ff4444,#c41414);
+    box-shadow:0 5px 0 var(--br-shd),0 6px 22px rgba(255,0,0,.85),0 0 32px rgba(255,40,40,1),inset 0 1px 0 rgba(255,255,255,.1);}
+}
+.fkey.broken:hover{animation-play-state:paused;box-shadow:0 5px 0 var(--br-shd),0 6px 18px rgba(0,0,0,.5),0 0 22px rgba(255,50,50,.55),inset 0 1px 0 rgba(255,255,255,.08);}
+.fkey.broken:active{transform:translateY(3px);box-shadow:0 2px 0 var(--br-shd),0 3px 6px rgba(0,0,0,.6);animation:none;}
 .fkey.pm{background:linear-gradient(180deg,var(--pm-top),var(--pm-mid));border:1.5px solid var(--pm-bdr);
   box-shadow:0 5px 0 var(--pm-shd),0 6px 10px rgba(0,0,0,.6),0 0 14px var(--pm-glow),inset 0 1px 0 rgba(255,255,255,.07);}
 .fkey.pm:active{transform:translateY(3px);animation:none;}
@@ -132,29 +139,9 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
   box-shadow:0 5px 0 var(--un-shd),0 6px 8px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.04);}
 .fkey.unknown:hover{border-color:#3a4a60;}
 
-/* ── MODEL RING (แสดงรุ่นพัดลมเป็นวงแหวนรอบปุ่ม) ── */
-.fkey.ring-pink::before,
-.fkey.ring-orange::before,
-.fkey.ring-purple::before,
-.fkey.ring-white::before,
-.fkey.ring-blue::before,
-.fkey.ring-green::before{
-  content:'';
-  position:absolute;
-  inset:-3px;
-  border-radius:9px;
-  pointer-events:none;
-  z-index:1;
-}
-.fkey.ring-pink::before{border:3px solid #ff4fa3;box-shadow:0 0 6px rgba(255,79,163,.6);}
-.fkey.ring-orange::before{border:3px solid #ff9800;box-shadow:0 0 6px rgba(255,152,0,.6);}
-.fkey.ring-purple::before{border:3px solid #a259ff;box-shadow:0 0 6px rgba(162,89,255,.6);}
-.fkey.ring-white::before{border:3px solid #ffffff;box-shadow:0 0 6px rgba(255,255,255,.6);}
-.fkey.ring-blue::before{border:3px solid #29b6ff;box-shadow:0 0 10px rgba(41,182,255,.85),0 0 18px rgba(41,182,255,.5);}
-.fkey.ring-green::before{border:3px solid #4dff88;box-shadow:0 0 10px rgba(77,255,136,.85),0 0 18px rgba(77,255,136,.5);}
-/* เมื่อสถานะเป็น PM (กำลังทำ PM) การ์ดที่มีวงแหวนสีเขียว/ฟ้า ให้แสงเรืองรอบการ์ดเป็นสีเดียวกับวงแหวน แทนสีเหลืองมาตรฐาน */
-.fkey.pm.ring-green{box-shadow:0 5px 0 var(--pm-shd),0 6px 10px rgba(0,0,0,.6),0 0 14px rgba(77,255,136,.5),inset 0 1px 0 rgba(255,255,255,.07);}
-.fkey.pm.ring-blue{box-shadow:0 5px 0 var(--pm-shd),0 6px 10px rgba(0,0,0,.6),0 0 14px rgba(41,182,255,.5),inset 0 1px 0 rgba(255,255,255,.07);}
+/* ── MODEL RING: ยกเลิกแล้ว ย้ายสีรุ่นไปแสดงที่ LED กลางปุ่ม (.kdot) แทน ── */
+
+
 
 /* ── FLOOR OVERVIEW MAP: ปุ่ม + modal แสดงภาพรวมแผนผังทั้งชั้น ── */
 .floor-map-btn{background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.3);color:#00e5ff;
@@ -202,17 +189,19 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .fovm-error b{color:#fff;word-break:break-all;}
 
 /* BLINK animations */
-.fkey.broken .kdot{animation:blink .8s infinite;}
 .fkey.pm .kdot{animation:blink .9s infinite;}
 
 .kid{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;letter-spacing:.02em;
   color:#fff;opacity:.92;line-height:1.2;text-align:center;padding:0 3px;pointer-events:none;
   max-width:80px;word-break:break-all;}
-.kdot{width:5px;height:5px;border-radius:50%;flex-shrink:0;pointer-events:none;margin-top:1px;}
-.fkey.ok .kdot{background:var(--success);box-shadow:0 0 5px var(--success);}
-.fkey.broken .kdot{background:var(--danger);box-shadow:0 0 5px var(--danger);}
-.fkey.pm .kdot{background:var(--warning);box-shadow:0 0 5px var(--warning);}
-.fkey.unknown .kdot{background:#3a4a60;}
+.kdot{width:5px;height:5px;border-radius:50%;flex-shrink:0;pointer-events:none;margin-top:1px;
+  background:#4dff88;box-shadow:0 0 5px rgba(77,255,136,.6);}
+.fkey.ring-pink .kdot{background:#ff4fa3;box-shadow:0 0 6px rgba(255,79,163,.9);}
+.fkey.ring-orange .kdot{background:#ff9800;box-shadow:0 0 6px rgba(255,152,0,.9);}
+.fkey.ring-purple .kdot{background:#a259ff;box-shadow:0 0 6px rgba(162,89,255,.9);}
+.fkey.ring-white .kdot{background:#ffffff;box-shadow:0 0 6px rgba(255,255,255,.9);}
+.fkey.ring-blue .kdot{background:#29b6ff;box-shadow:0 0 8px rgba(41,182,255,1);}
+.fkey.ring-green .kdot{background:#4dff88;box-shadow:0 0 8px rgba(77,255,136,1);}
 
 /* ── MODAL ── */
 .moverlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);
@@ -316,12 +305,14 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .leg-k.broken{background:var(--br-top);border:1px solid var(--br-bdr);box-shadow:0 2px 0 var(--br-shd),0 0 5px var(--br-glow);}
 .leg-k.pm{background:var(--pm-top);border:1px solid var(--pm-bdr);box-shadow:0 2px 0 var(--pm-shd),0 0 5px var(--pm-glow);}
 .leg-k.unknown{background:var(--un-top);border:1px solid var(--un-bdr);}
-.leg-k.ring-pink{background:transparent;border:3px solid #ff4fa3;box-shadow:0 0 5px rgba(255,79,163,.6);}
-.leg-k.ring-orange{background:transparent;border:3px solid #ff9800;box-shadow:0 0 5px rgba(255,152,0,.6);}
-.leg-k.ring-purple{background:transparent;border:3px solid #a259ff;box-shadow:0 0 5px rgba(162,89,255,.6);}
-.leg-k.ring-white{background:transparent;border:3px solid #ffffff;box-shadow:0 0 5px rgba(255,255,255,.6);}
-.leg-k.ring-blue{background:transparent;border:3px solid #29b6ff;box-shadow:0 0 8px rgba(41,182,255,.85);}
-.leg-k.ring-green{background:transparent;border:3px solid #4dff88;box-shadow:0 0 8px rgba(77,255,136,.85);}
+.leg-k.ring-pink,.leg-k.ring-orange,.leg-k.ring-purple,.leg-k.ring-white,.leg-k.ring-blue,.leg-k.ring-green{
+  width:14px;height:14px;border-radius:50%;border:none;}
+.leg-k.ring-pink{background:#ff4fa3;box-shadow:0 0 6px rgba(255,79,163,.8);}
+.leg-k.ring-orange{background:#ff9800;box-shadow:0 0 6px rgba(255,152,0,.8);}
+.leg-k.ring-purple{background:#a259ff;box-shadow:0 0 6px rgba(162,89,255,.8);}
+.leg-k.ring-white{background:#ffffff;box-shadow:0 0 6px rgba(255,255,255,.8);}
+.leg-k.ring-blue{background:#29b6ff;box-shadow:0 0 8px rgba(41,182,255,.9);}
+.leg-k.ring-green{background:#4dff88;box-shadow:0 0 8px rgba(77,255,136,.9);}
 
 /* TOAST */
 #toast{position:fixed;bottom:54px;left:50%;transform:translateX(-50%) translateY(80px);
@@ -13073,14 +13064,15 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 <!-- LEGEND -->
 <div class="legend">
   <div class="leg-i"><div class="leg-k ok"></div>ปกติ</div>
-  <div class="leg-i"><div class="leg-k broken"></div>ชำรุด (กะพริบ)</div>
+  <div class="leg-i"><div class="leg-k broken"></div>ชำรุด</div>
   <div class="leg-i"><div class="leg-k pm"></div>กำลัง PM (กะพริบ)</div>
   <div class="leg-i"><div class="leg-k unknown"></div>ไม่ทราบ</div>
-  <div class="leg-i"><div class="leg-k ring-pink"></div>รุ่น 250X</div>
-  <div class="leg-i"><div class="leg-k ring-orange"></div>รุ่น 160X</div>
-  <div class="leg-i"><div class="leg-k ring-purple"></div>รุ่น 250D</div>
-  <div class="leg-i"><div class="leg-k ring-white"></div>รุ่น 200D</div>
-  <div class="leg-i"><div class="leg-k ring-blue"></div>รุ่น 225D</div>
+  <div class="leg-i" style="margin-left:8px;color:#556;">| รุ่น (จุด LED กลางปุ่ม):</div>
+  <div class="leg-i"><div class="leg-k ring-pink"></div>250X</div>
+  <div class="leg-i"><div class="leg-k ring-orange"></div>160X</div>
+  <div class="leg-i"><div class="leg-k ring-purple"></div>250D</div>
+  <div class="leg-i"><div class="leg-k ring-white"></div>200D</div>
+  <div class="leg-i"><div class="leg-k ring-blue"></div>225D</div>
   <div class="leg-i"><div class="leg-k ring-green"></div>รุ่นอื่นๆ</div>
 </div>
 
