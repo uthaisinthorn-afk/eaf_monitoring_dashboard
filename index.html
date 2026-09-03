@@ -125,10 +125,10 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
   box-shadow:0 5px 0 var(--br-shd),0 6px 10px rgba(0,0,0,.6),0 0 14px var(--br-glow),inset 0 1px 0 rgba(255,255,255,.06);
   animation:blinkRedCard .8s infinite;}
 @keyframes blinkRedCard{
-  0%,100%{background:linear-gradient(180deg,var(--br-top),var(--br-mid));
+  0%,100%{border-color:var(--br-bdr);
     box-shadow:0 5px 0 var(--br-shd),0 6px 10px rgba(0,0,0,.6),0 0 14px var(--br-glow),inset 0 1px 0 rgba(255,255,255,.06);}
-  50%{background:linear-gradient(180deg,#ff4444,#c41414);
-    box-shadow:0 5px 0 var(--br-shd),0 6px 22px rgba(255,0,0,.85),0 0 32px rgba(255,40,40,1),inset 0 1px 0 rgba(255,255,255,.1);}
+  50%{border-color:#ff3b3b;
+    box-shadow:0 5px 0 var(--br-shd),0 6px 10px rgba(0,0,0,.6),0 0 24px rgba(255,30,30,1),inset 0 1px 0 rgba(255,255,255,.06);}
 }
 .fkey.broken:hover{animation-play-state:paused;box-shadow:0 5px 0 var(--br-shd),0 6px 18px rgba(0,0,0,.5),0 0 22px rgba(255,50,50,.55),inset 0 1px 0 rgba(255,255,255,.08);}
 .fkey.broken:active{transform:translateY(3px);box-shadow:0 2px 0 var(--br-shd),0 3px 6px rgba(0,0,0,.6);animation:none;}
