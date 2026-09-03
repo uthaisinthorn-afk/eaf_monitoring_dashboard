@@ -149,7 +149,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
   padding:4px 10px;cursor:pointer;margin-left:8px;flex-shrink:0;
   display:inline-flex;align-items:center;gap:4px;transition:all .15s;}
 .floor-map-btn:hover{background:rgba(0,229,255,.18);box-shadow:0 0 10px rgba(0,229,255,.3);}
-.floor-model-summary{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+.floor-model-summary{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-4px 0 12px;}
 .fms-item{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;font-size:11px;
   background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.15);color:#cfd8dc;white-space:nowrap;}
 .fms-item b{font-weight:800;}
@@ -13688,11 +13688,11 @@ function render() {
       <div class="floor-hdr" onclick="togFloor('${fl}')">
         <div class="floor-lbl">ชั้น ${fl}</div>
         ${overviewBtn}
-        ${modelSummaryHTML}
         <div class="floor-div"></div>
         <div class="floor-cnt">${floorCount} เครื่อง</div>
         <div class="floor-tog" id="ft-${fl}">▾</div>
       </div>
+      ${modelSummaryHTML}
       <div id="fb-${fl}">${floorParts.join('')}</div>
     </div>`);
   });
