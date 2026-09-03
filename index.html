@@ -172,12 +172,6 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .fms-item.ring-white{border-color:#ffffff;color:#ffffff;}
 .fms-item.ring-blue{border-color:#29b6ff;color:#29b6ff;}
 .fms-item.ring-green{border-color:#4dff88;color:#4dff88;}
-.global-model-summary{margin:10px 20px;padding:14px 16px;background:rgba(255,255,255,.03);
-  border:1px solid rgba(0,229,255,.2);border-radius:10px;}
-.global-model-summary .gms-title{color:#00e5ff;font-size:13px;font-weight:700;margin-bottom:10px;
-  display:flex;align-items:center;gap:6px;}
-.global-model-summary .gms-title .gms-total{color:#7fffb0;font-weight:800;}
-.global-model-summary .fms-item{font-size:12px;padding:3px 10px;}
 .fovm-modal{position:fixed;inset:0;background:#000;z-index:10000;display:none;flex-direction:column;font-family:'Sarabun',sans-serif;}
 .fovm-modal.open{display:flex;}
 .fovm-topbar{background:#060606;border-bottom:1px solid #1a2a1a;padding:10px 16px;
@@ -186,19 +180,8 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .fovm-close{background:#111;border:1px solid #333;color:#aaa;
   padding:7px 16px;border-radius:6px;font-size:12px;cursor:pointer;transition:all .15s;}
 .fovm-close:hover{border-color:#555;color:#fff;}
-.fovm-zoom-btn{background:#111;border:1px solid #333;color:#00e5ff;
-  width:32px;height:32px;border-radius:6px;font-size:15px;cursor:pointer;transition:all .15s;
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.fovm-zoom-btn:hover{border-color:#00e5ff;background:rgba(0,229,255,.1);}
-.fovm-zoom-pct{color:#8a93b8;font-size:12px;min-width:44px;text-align:center;flex-shrink:0;user-select:none;}
-.fovm-body{flex:1;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;
-  background:#000;padding:0;touch-action:none;cursor:grab;}
-.fovm-body.dragging{cursor:grabbing;}
-.fovm-body img{max-width:none;max-height:none;display:block;pointer-events:none;
-  transform-origin:0 0;will-change:transform;user-select:none;}
-.fovm-error{color:#ff8a80;font-family:'Sarabun',sans-serif;font-size:14px;text-align:center;
-  max-width:520px;line-height:1.7;padding:20px;display:none;}
-.fovm-error b{color:#fff;word-break:break-all;}
+.fovm-body{flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;background:#000;padding:8px;}
+.fovm-body img{max-width:100%;height:auto;display:block;}
 
 /* BLINK animations */
 .fkey.broken .kdot{animation:blink .8s infinite;}
@@ -861,15 +844,10 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 <div class="fovm-modal" id="fovmModal">
   <div class="fovm-topbar">
     <h2 id="fovmTitle">🗺️ แผนที่ชั้น</h2>
-    <button class="fovm-zoom-btn" onclick="fovmZoomBtn(-1)" title="ซูมออก">−</button>
-    <span class="fovm-zoom-pct" id="fovmZoomPct">100%</span>
-    <button class="fovm-zoom-btn" onclick="fovmZoomBtn(1)" title="ซูมเข้า">+</button>
-    <button class="fovm-zoom-btn" onclick="fovmResetZoom()" title="รีเซ็ตซูม" style="width:auto;padding:0 10px;font-size:12px;">⟲ รีเซ็ต</button>
     <button class="fovm-close" onclick="closeFloorOverviewMap()">✕ ปิด</button>
   </div>
-  <div class="fovm-body" id="fovmBody">
+  <div class="fovm-body">
     <img id="fovmImg" src="" alt="แผนที่รวมชั้น">
-    <div class="fovm-error" id="fovmError"></div>
   </div>
 </div>
 
@@ -923,9 +901,6 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
   <div class="stat hasid"><div class="n" id="s-hasid">2009</div><div class="l">🏷 มีหมายเลขครุภัณฑ์</div></div>
   <div class="stat noid"><div class="n" id="s-noid">1836</div><div class="l">🔲 ไม่มีหมายเลขครุภัณฑ์</div></div>
 </div>
-
-<!-- GLOBAL MODEL SUMMARY: สรุปจำนวนพัดลมแต่ละรุ่นรวมทุกชั้น (อยู่ใต้ dashboard สรุปด้านบน) -->
-<div class="global-model-summary" id="globalModelSummary"></div>
 
 <!-- CONTROLS -->
 <div style="display:flex;align-items:center;padding:0 20px 8px;">
@@ -13737,32 +13712,6 @@ function updateStats() {
   const noid  = RAW.length - hasid;
   document.getElementById('s-hasid').textContent = hasid;
   document.getElementById('s-noid').textContent  = noid;
-  renderGlobalModelSummary();
-}
-
-// ─── GLOBAL MODEL SUMMARY: สรุปจำนวนพัดลมแต่ละรุ่น รวมทุกชั้นทุกโซน ──
-function renderGlobalModelSummary() {
-  const el = document.getElementById('globalModelSummary');
-  if (!el) return;
-  const modelCounts = {};
-  RAW.forEach(r => {
-    const mRaw = (r[3] || '').trim();
-    const key = mRaw.toUpperCase() || 'ไม่ระบุรุ่น';
-    modelCounts[key] = (modelCounts[key] || 0) + 1;
-  });
-  const MODEL_ORDER = ['250X', '160X', '250D', '225D', '200D'];
-  const modelKeys = Object.keys(modelCounts).sort((a, b) => {
-    const ia = MODEL_ORDER.indexOf(a), ib = MODEL_ORDER.indexOf(b);
-    if (ia !== -1 && ib !== -1) return ia - ib;
-    if (ia !== -1) return -1;
-    if (ib !== -1) return 1;
-    return modelCounts[b] - modelCounts[a] || a.localeCompare(b);
-  });
-  const items = modelKeys.map(k =>
-    `<span class="fms-item ${getModelRingClass(k)}">${k} <b>${modelCounts[k]}</b> ตัว</span>`
-  ).join('');
-  el.innerHTML = `<div class="gms-title">📊 สรุปจำนวนพัดลมแยกตามรุ่น (รวมทุกชั้น) — ทั้งหมด <span class="gms-total">${RAW.length}</span> ตัว</div>
-    <div class="floor-model-summary">${items}</div>`;
 }
 
 // ─── PM MODE ─────────────────────────────────────────────
@@ -13975,164 +13924,17 @@ async function defectDoSubmit() {
   }
 }
 
-// ─── FLOOR OVERVIEW MAP: แผนที่รวมชั้น (ภาพนิ่งแยกตามรุ่น) พร้อมซูม/แพน ───
-const fovmState = { scale: 1, tx: 0, ty: 0, minScale: 0.2, maxScale: 8,
-  dragging: false, startX: 0, startY: 0, startTx: 0, startTy: 0,
-  pinchDist: 0, pinchScale: 1, naturalW: 0, naturalH: 0 };
-
+// ─── FLOOR OVERVIEW MAP: แผนที่รวมชั้น (ภาพนิ่งแยกตามรุ่น) ───
 function openFloorOverviewMap(floor) {
   const file = FLOOR_OVERVIEW_MAPS[floor];
   if (!file) { showToast('⚠️ ยังไม่มีแผนที่รวมสำหรับชั้นนี้', 'warn'); return; }
-  const img = document.getElementById('fovmImg');
-  const errEl = document.getElementById('fovmError');
-  const path = 'floors/' + file;
-
   document.getElementById('fovmTitle').textContent = '🗺️ แผนที่ชั้น ' + floor;
-  errEl.style.display = 'none';
-  img.style.display = '';
-  img.src = '';
-  img.onload = () => {
-    fovmState.naturalW = img.naturalWidth;
-    fovmState.naturalH = img.naturalHeight;
-    fovmFitToScreen();
-  };
-  img.onerror = () => {
-    img.style.display = 'none';
-    errEl.style.display = 'block';
-    errEl.innerHTML = `⚠️ ไม่พบไฟล์แผนที่สำหรับชั้น ${floor}<br><br>ระบบพยายามโหลดไฟล์: <b>${path}</b><br><br>กรุณาตรวจสอบว่าอัปโหลดไฟล์นี้ไว้ในโฟลเดอร์ <b>floors/</b> บน GitHub Pages แล้ว และชื่อไฟล์ตรงกันทุกตัวอักษร (ตัวพิมพ์เล็ก-ใหญ่มีผล)`;
-  };
-  img.src = path;
+  document.getElementById('fovmImg').src = 'floors/' + file;
   document.getElementById('fovmModal').classList.add('open');
 }
-
 function closeFloorOverviewMap() {
   document.getElementById('fovmModal').classList.remove('open');
 }
-
-function fovmApplyTransform() {
-  const img = document.getElementById('fovmImg');
-  img.style.transform = `translate(${fovmState.tx}px, ${fovmState.ty}px) scale(${fovmState.scale})`;
-  document.getElementById('fovmZoomPct').textContent = Math.round(fovmState.scale / (fovmState.fitScale || 1) * 100) + '%';
-}
-
-function fovmFitToScreen() {
-  const body = document.getElementById('fovmBody');
-  const img = document.getElementById('fovmImg');
-  if (!fovmState.naturalW || !fovmState.naturalH) return;
-  const bw = body.clientWidth, bh = body.clientHeight;
-  const fit = Math.min(bw / fovmState.naturalW, bh / fovmState.naturalH);
-  fovmState.fitScale = fit;
-  fovmState.scale = fit;
-  img.style.width = fovmState.naturalW + 'px';
-  img.style.height = fovmState.naturalH + 'px';
-  fovmState.tx = (bw - fovmState.naturalW * fit) / 2;
-  fovmState.ty = (bh - fovmState.naturalH * fit) / 2;
-  fovmApplyTransform();
-}
-
-function fovmResetZoom() {
-  fovmFitToScreen();
-}
-
-function fovmZoomAt(factor, clientX, clientY) {
-  const body = document.getElementById('fovmBody');
-  const rect = body.getBoundingClientRect();
-  const px = clientX - rect.left, py = clientY - rect.top;
-  const newScale = Math.min(fovmState.maxScale, Math.max(fovmState.minScale, fovmState.scale * factor));
-  const realFactor = newScale / fovmState.scale;
-  fovmState.tx = px - (px - fovmState.tx) * realFactor;
-  fovmState.ty = py - (py - fovmState.ty) * realFactor;
-  fovmState.scale = newScale;
-  fovmApplyTransform();
-}
-
-function fovmZoomBtn(dir) {
-  const body = document.getElementById('fovmBody');
-  const rect = body.getBoundingClientRect();
-  fovmZoomAt(dir > 0 ? 1.3 : 1 / 1.3, rect.left + rect.width / 2, rect.top + rect.height / 2);
-}
-
-(function initFovmInteractions() {
-  const body = document.getElementById('fovmBody');
-  if (!body) return;
-
-  body.addEventListener('wheel', (e) => {
-    if (!document.getElementById('fovmModal').classList.contains('open')) return;
-    e.preventDefault();
-    const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
-    fovmZoomAt(factor, e.clientX, e.clientY);
-  }, { passive: false });
-
-  body.addEventListener('mousedown', (e) => {
-    fovmState.dragging = true;
-    fovmState.startX = e.clientX;
-    fovmState.startY = e.clientY;
-    fovmState.startTx = fovmState.tx;
-    fovmState.startTy = fovmState.ty;
-    body.classList.add('dragging');
-  });
-  window.addEventListener('mousemove', (e) => {
-    if (!fovmState.dragging) return;
-    fovmState.tx = fovmState.startTx + (e.clientX - fovmState.startX);
-    fovmState.ty = fovmState.startTy + (e.clientY - fovmState.startY);
-    fovmApplyTransform();
-  });
-  window.addEventListener('mouseup', () => {
-    fovmState.dragging = false;
-    body.classList.remove('dragging');
-  });
-
-  body.addEventListener('dblclick', (e) => {
-    const isFit = Math.abs(fovmState.scale - fovmState.fitScale) < 0.001;
-    if (isFit) fovmZoomAt(2.2, e.clientX, e.clientY);
-    else fovmFitToScreen();
-  });
-
-  // Touch: pan (1 finger) + pinch zoom (2 fingers)
-  function touchDist(t) {
-    const dx = t[0].clientX - t[1].clientX, dy = t[0].clientY - t[1].clientY;
-    return Math.hypot(dx, dy);
-  }
-  body.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1) {
-      fovmState.dragging = true;
-      fovmState.startX = e.touches[0].clientX;
-      fovmState.startY = e.touches[0].clientY;
-      fovmState.startTx = fovmState.tx;
-      fovmState.startTy = fovmState.ty;
-    } else if (e.touches.length === 2) {
-      fovmState.dragging = false;
-      fovmState.pinchDist = touchDist(e.touches);
-      fovmState.pinchScale = fovmState.scale;
-    }
-  }, { passive: true });
-  body.addEventListener('touchmove', (e) => {
-    if (e.touches.length === 1 && fovmState.dragging) {
-      fovmState.tx = fovmState.startTx + (e.touches[0].clientX - fovmState.startX);
-      fovmState.ty = fovmState.startTy + (e.touches[0].clientY - fovmState.startY);
-      fovmApplyTransform();
-    } else if (e.touches.length === 2) {
-      const d = touchDist(e.touches);
-      const factor = d / fovmState.pinchDist;
-      const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-      const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-      const target = Math.min(fovmState.maxScale, Math.max(fovmState.minScale, fovmState.pinchScale * factor));
-      const realFactor = target / fovmState.scale;
-      const rect = body.getBoundingClientRect();
-      const px = cx - rect.left, py = cy - rect.top;
-      fovmState.tx = px - (px - fovmState.tx) * realFactor;
-      fovmState.ty = py - (py - fovmState.ty) * realFactor;
-      fovmState.scale = target;
-      fovmApplyTransform();
-    }
-    e.preventDefault();
-  }, { passive: false });
-  body.addEventListener('touchend', () => { fovmState.dragging = false; });
-
-  window.addEventListener('resize', () => {
-    if (document.getElementById('fovmModal').classList.contains('open')) fovmFitToScreen();
-  });
-})();
 
 // ─── แผนการทำ PM (PM Plan) — ไม่แตะ/ไม่กระทบระบบ PM Mode เดิมที่มีอยู่แล้ว ───
 const PM_PLAN_DEFAULT = { M: [], Q: [], S: [] };
@@ -15703,33 +15505,33 @@ var FLOOR_IMAGE_FILES_PRINT = {
   }
 };
 var FLOOR_OVERVIEW_MAPS = {
-  "1": "floor1_pinned_final.png",
-  "2": "floor2_pinned_final.png",
-  "3": "floor3_pinned_final.png",
-  "4": "floor4_pinned_final.png",
-  "5": "floor5_pinned_final.png",
-  "6": "floor6_pinned_final.png",
-  "7": "floor7_pinned_final.png",
-  "8": "floor8_pinned_final.png",
-  "9": "floor9_pinned_final.png",
-  "10": "floor10_pinned_final.png",
-  "11": "floor11_pinned_final.png",
-  "12": "floor12_pinned_final.png",
-  "13": "floor13_pinned_final.png",
-  "20": "floor20_pinned_final.png",
-  "21": "floor21_pinned_final.png",
-  "22": "floor22_pinned_final.png",
-  "23": "floor23_pinned_final.png",
-  "24": "floor24_pinned_final.png",
-  "25": "floor25_pinned_final.png",
-  "26": "floor26_pinned_final.png",
-  "27": "floor27_pinned_final.png",
-  "28": "floor28_pinned_final.png",
-  "B1": "floorB1_pinned_final.png",
-  "B2": "floorB2_pinned_final.png",
-  "B3": "floorB3_pinned_final.png",
-  "B4": "floorB4_pinned_final.png",
-  "MZ": "floorMZ_pinned_final.png"
+  "1": "floor1_colored_by_model.png",
+  "2": "floor2_colored_by_model.png",
+  "3": "floor3_colored_by_model.png",
+  "4": "floor4_colored_by_model.png",
+  "5": "floor5_colored_by_model.png",
+  "6": "floor6_colored_by_model.png",
+  "7": "floor7_colored_by_model.png",
+  "8": "floor8_colored_by_model.png",
+  "9": "floor9_colored_by_model.png",
+  "10": "floor10_colored_by_model.png",
+  "11": "floor11_colored_by_model.png",
+  "12": "floor12_colored_by_model.png",
+  "13": "floor13_colored_by_model.png",
+  "20": "floor20_colored_by_model.png",
+  "21": "floor21_colored_by_model.png",
+  "22": "floor22_colored_by_model.png",
+  "23": "floor23_colored_by_model.png",
+  "24": "floor24_colored_by_model.png",
+  "25": "floor25_colored_by_model.png",
+  "26": "floor26_colored_by_model.png",
+  "27": "floor27_colored_by_model.png",
+  "28": "floor28_colored_by_model.png",
+  "B1": "floorB1_colored_by_model.png",
+  "B2": "floorB2_colored_by_model.png",
+  "B3": "floorB3_colored_by_model.png",
+  "B4": "floorB4_colored_by_model.png",
+  "MZ": "floorMZ_colored_by_model.png"
 };
 // FLOOR_COORDS: พิกัด % ของแต่ละเครื่อง ต่อชั้น (key = รหัสเครื่อง ตรงตาม RAW)
 var FLOOR_COORDS = {
