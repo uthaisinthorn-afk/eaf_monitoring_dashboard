@@ -13958,7 +13958,7 @@ async function defectDoSubmit() {
   setTimeout(() => { closeDefectPanel(); btn.textContent = '🛠️ บันทึกการแจ้งปัญหา'; btn.disabled = false; }, 600);
 
   try {
-    await fetch(GS_PM, {
+    await fetch(GS_URL, {
       method:'POST', mode:'no-cors',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify(payload)
