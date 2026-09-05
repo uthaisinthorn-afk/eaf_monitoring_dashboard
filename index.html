@@ -473,6 +473,40 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .pm-photo-status.done{color:#00cc7a;}
 .pm-photo-status.err{color:#ff4444;}
 
+/* ── EQUIPMENT REGISTER PANEL (ทะเบียนประวัติเครื่องจักร) ── */
+#equip-overlay{position:fixed;inset:0;z-index:250;background:rgba(0,0,0,.82);backdrop-filter:blur(8px);
+  opacity:0;pointer-events:none;transition:opacity .25s;}
+#equip-overlay.show{opacity:1;pointer-events:all;}
+#equip-panel{position:fixed;top:0;right:0;bottom:0;width:min(480px,100vw);z-index:251;
+  background:#071620;border-left:1px solid rgba(0,200,255,.25);
+  display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s ease;overflow:hidden;}
+#equip-panel.show{transform:translateX(0);}
+#equip-panel .pm-head{background:linear-gradient(90deg,rgba(0,200,255,.08),transparent);border-bottom:1px solid rgba(0,200,255,.2);}
+#equip-panel .pm-head-title p{color:#00c8ff;}
+#equip-panel .pm-select:focus,#equip-panel .pm-input:focus,#equip-panel .pm-note:focus{border-color:#00c8ff;}
+#equip-panel .pm-section label{color:#5a94ad;}
+#equip-panel .pm-photo-btn:hover{border-color:#00c8ff;color:#00c8ff;background:rgba(0,200,255,.08);}
+#equip-panel .pm-submit-btn{background:linear-gradient(90deg,#00a8e8,#00c8ff);}
+#equip-panel .pm-submit-btn:hover{box-shadow:0 6px 28px rgba(0,200,255,.5);}
+#equip-panel .eq-readonly{background:rgba(255,255,255,.03)!important;color:#8fb8c8;cursor:not-allowed;}
+.eq-tabs{display:flex;gap:6px;margin-bottom:10px;}
+.eq-tab-btn{flex:1;padding:8px 6px;border-radius:8px;border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.04);color:#5a94ad;font-family:'Sarabun',sans-serif;font-size:12px;
+  font-weight:700;cursor:pointer;transition:all .15s;}
+.eq-tab-btn.sel{border-color:#00c8ff;background:rgba(0,200,255,.1);color:#00c8ff;}
+.eq-tab-body{display:none;}
+.eq-tab-body.show{display:block;}
+.eq-hist-table{width:100%;border-collapse:collapse;font-size:11px;}
+.eq-hist-table th{text-align:left;color:#5a94ad;font-weight:700;padding:6px 4px;
+  border-bottom:1px solid rgba(255,255,255,.12);font-family:'IBM Plex Mono',monospace;}
+.eq-hist-table td{padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.06);color:#dce8ee;vertical-align:top;}
+.eq-hist-empty{text-align:center;color:#5a94ad;font-size:12px;padding:16px 0;}
+.eq-add-repair-btn{width:100%;padding:9px;border-radius:8px;border:1px dashed rgba(0,200,255,.35);
+  background:rgba(0,200,255,.06);color:#00c8ff;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:10px;}
+.eq-repair-form{display:none;border:1px solid rgba(0,200,255,.2);border-radius:10px;padding:12px;margin-bottom:14px;background:rgba(255,255,255,.02);}
+.eq-repair-form.show{display:block;}
+.eq-mini-submit{width:100%;padding:9px;border:none;border-radius:8px;background:#00c8ff;color:#001;font-weight:700;font-size:12px;cursor:pointer;margin-top:4px;}
+
 /* ─── SYNC STATUS ─────────────────────────────────────── */
 .sync-bar{display:flex;align-items:center;gap:8px;padding:4px 12px;
   background:rgba(0,0,0,.25);border-radius:6px;font-size:11px;color:#6a9a7a;}
@@ -13115,6 +13149,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
       <button class="btn-open-pm" onclick="openPMForm()">📋 แบบฟอร์ม PM</button>
       <button class="btn-map-view" onclick="openMapFull()">🗺 แผนที่</button>
       <button class="btn-defect" onclick="openDefectForm()">🛠️ DEFECT</button>
+      <button class="btn-open-pm" onclick="openEquipForm()">🗂 ทะเบียนประวัติ</button>
       <button class="btn-mclose" onclick="closeModal()">ปิด</button>
     </div>
   </div>
@@ -13426,6 +13461,266 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
     <button class="loc-btn-close" onclick="closeLocationPreview()">✕ ปิด</button>
   </div>
   <div id="loc-page"></div>
+</div>
+
+<!-- ── EQUIPMENT REGISTER PANEL (ทะเบียนประวัติเครื่องจักร) ── -->
+<div id="equip-overlay" onclick="closeEquipPanel()" class=""></div>
+<div id="equip-panel" class="">
+  <div class="pm-head">
+    <div class="pm-head-title">
+      <h2>🗂 ทะเบียนประวัติเครื่องจักร</h2>
+      <p id="eq-machine-label">1EF-21/20 — ห้องน้ำ-2</p>
+    </div>
+    <button class="pm-close-btn" onclick="closeEquipPanel()">✕</button>
+  </div>
+  <div class="pm-body">
+
+    <div class="eq-tabs">
+      <button class="eq-tab-btn sel" id="eq-tab-btn-info" onclick="eqShowTab('info')">📋 ข้อมูล</button>
+      <button class="eq-tab-btn" id="eq-tab-btn-pm" onclick="eqShowTab('pm')">🛠 ประวัติ PM</button>
+      <button class="eq-tab-btn" id="eq-tab-btn-repair" onclick="eqShowTab('repair')">🔧 ประวัติซ่อม</button>
+    </div>
+
+    <!-- ── TAB: ข้อมูลทั่วไป + เทคนิค + รูป ── -->
+    <div class="eq-tab-body show" id="eq-tab-info">
+
+      <div class="pm-section">
+        <div class="pm-row2">
+          <div>
+            <label>หมายเลขเครื่อง</label>
+            <input class="pm-input eq-readonly" id="eq-machineid" type="text" readonly>
+          </div>
+          <div>
+            <label>หมายเลขครุภัณฑ์</label>
+            <input class="pm-input eq-readonly" id="eq-asset" type="text" readonly>
+          </div>
+        </div>
+      </div>
+      <div class="pm-section">
+        <div class="pm-row2">
+          <div>
+            <label>ชั้น / โซน</label>
+            <input class="pm-input eq-readonly" id="eq-floorzone" type="text" readonly>
+          </div>
+          <div>
+            <label>รุ่นเครื่อง</label>
+            <input class="pm-input eq-readonly" id="eq-model" type="text" readonly>
+          </div>
+        </div>
+      </div>
+      <div class="pm-section">
+        <label>สถานที่ติดตั้ง</label>
+        <input class="pm-input eq-readonly" id="eq-location" type="text" readonly>
+      </div>
+      <div class="pm-section">
+        <label>แผนก</label>
+        <input class="pm-input eq-readonly" id="eq-dept" type="text" readonly>
+      </div>
+
+      <hr class="pm-divider">
+      <div class="pm-section">
+        <label style="font-size:12px;color:#00c8ff;font-weight:700;">ข้อมูลทางเทคนิค (กรอกเพิ่มได้)</label>
+      </div>
+      <div class="pm-section">
+        <div class="pm-row2">
+          <div>
+            <label>ยี่ห้อ (Brand)</label>
+            <input class="pm-input" id="eq-brand" type="text" placeholder="เช่น Grundfos">
+          </div>
+          <div>
+            <label>รุ่นผลิตภัณฑ์ (Model)</label>
+            <input class="pm-input" id="eq-tech-model" type="text" placeholder="เช่น CR5-10">
+          </div>
+        </div>
+      </div>
+      <div class="pm-section">
+        <div class="pm-row2">
+          <div>
+            <label>เลขเครื่อง (S/N)</label>
+            <input class="pm-input" id="eq-serial" type="text" placeholder="Serial Number">
+          </div>
+          <div>
+            <label>ผู้จำหน่าย (Supplier)</label>
+            <input class="pm-input" id="eq-supplier" type="text" placeholder="ผู้จำหน่าย/ผู้ผลิต">
+          </div>
+        </div>
+      </div>
+      <div class="pm-section">
+        <div class="pm-row2">
+          <div>
+            <label>ประเทศผู้ผลิต</label>
+            <input class="pm-input" id="eq-madeby" type="text" placeholder="เช่น Denmark">
+          </div>
+          <div>
+            <label>ความเร็วรอบ (RPM)</label>
+            <input class="pm-input" id="eq-rpm" type="text" placeholder="เช่น 2890-2910">
+          </div>
+        </div>
+      </div>
+      <div class="pm-section">
+        <div class="pm-row2">
+          <div>
+            <label>กำลังไฟฟ้า (Power)</label>
+            <input class="pm-input" id="eq-power" type="text" placeholder="เช่น 1.5 KW">
+          </div>
+          <div>
+            <label>แรงดันไฟฟ้า (Volts)</label>
+            <input class="pm-input" id="eq-voltage" type="text" placeholder="เช่น 380-415 V">
+          </div>
+        </div>
+      </div>
+      <div class="pm-section">
+        <label>ชนิดแหล่งจ่าย (Supply Source)</label>
+        <input class="pm-input" id="eq-supply" type="text" placeholder="เช่น Electrical">
+      </div>
+
+      <hr class="pm-divider">
+      <div class="pm-section" id="eq-photo-section">
+        <label>📷 รูปประกอบเครื่องจักร (ถ่ายจากมือถือหน้างาน)</label>
+        <div class="pm-photo-list">
+
+          <div class="pm-photo-card" id="eq-slot-0">
+            <div class="pm-photo-card-head">
+              <span class="card-icon">📟</span>
+              <span class="card-title">รหัสเครื่องจักร</span>
+              <button class="card-del" onclick="eqPhotoClear(event,0)">🗑</button>
+            </div>
+            <div class="pm-photo-card-body">
+              <div class="pm-photo-placeholder">📟</div>
+              <img class="pm-photo-thumb" id="eq-preview-0" src="" alt="">
+              <div class="pm-photo-btns">
+                <button class="pm-photo-btn" onclick="eqPhotoCamera(0)">
+                  <span class="btn-ico">📷</span><span class="btn-txt">กล้อง</span>
+                </button>
+                <button class="pm-photo-btn" onclick="eqPhotoGallery(0)">
+                  <span class="btn-ico">🖼</span><span class="btn-txt">อัปโหลด</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="pm-photo-card" id="eq-slot-1">
+            <div class="pm-photo-card-head">
+              <span class="card-icon">🏷️</span>
+              <span class="card-title">หมายเลขครุภัณฑ์</span>
+              <button class="card-del" onclick="eqPhotoClear(event,1)">🗑</button>
+            </div>
+            <div class="pm-photo-card-body">
+              <div class="pm-photo-placeholder">🏷️</div>
+              <img class="pm-photo-thumb" id="eq-preview-1" src="" alt="">
+              <div class="pm-photo-btns">
+                <button class="pm-photo-btn" onclick="eqPhotoCamera(1)">
+                  <span class="btn-ico">📷</span><span class="btn-txt">กล้อง</span>
+                </button>
+                <button class="pm-photo-btn" onclick="eqPhotoGallery(1)">
+                  <span class="btn-ico">🖼</span><span class="btn-txt">อัปโหลด</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="pm-photo-card" id="eq-slot-2">
+            <div class="pm-photo-card-head">
+              <span class="card-icon">🔖</span>
+              <span class="card-title">เนมเพลท</span>
+              <button class="card-del" onclick="eqPhotoClear(event,2)">🗑</button>
+            </div>
+            <div class="pm-photo-card-body">
+              <div class="pm-photo-placeholder">🔖</div>
+              <img class="pm-photo-thumb" id="eq-preview-2" src="" alt="">
+              <div class="pm-photo-btns">
+                <button class="pm-photo-btn" onclick="eqPhotoCamera(2)">
+                  <span class="btn-ico">📷</span><span class="btn-txt">กล้อง</span>
+                </button>
+                <button class="pm-photo-btn" onclick="eqPhotoGallery(2)">
+                  <span class="btn-ico">🖼</span><span class="btn-txt">อัปโหลด</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="pm-photo-status" id="eq-photo-status"></div>
+        <input type="file" id="eq-cam-0" accept="image/*" capture="environment" style="display:none;" onchange="eqPhotoSelected(0,this)">
+        <input type="file" id="eq-cam-1" accept="image/*" capture="environment" style="display:none;" onchange="eqPhotoSelected(1,this)">
+        <input type="file" id="eq-cam-2" accept="image/*" capture="environment" style="display:none;" onchange="eqPhotoSelected(2,this)">
+        <input type="file" id="eq-gal-0" accept="image/*" style="display:none;" onchange="eqPhotoSelected(0,this)">
+        <input type="file" id="eq-gal-1" accept="image/*" style="display:none;" onchange="eqPhotoSelected(1,this)">
+        <input type="file" id="eq-gal-2" accept="image/*" style="display:none;" onchange="eqPhotoSelected(2,this)">
+      </div>
+
+    </div>
+
+    <!-- ── TAB: ประวัติ PM (auto จาก EF_LOG) ── -->
+    <div class="eq-tab-body" id="eq-tab-pm">
+      <div class="pm-section">
+        <label>ประวัติการบำรุงรักษา (ดึงอัตโนมัติจาก EF_LOG)</label>
+        <div id="eq-pm-history-wrap">
+          <table class="eq-hist-table">
+            <thead><tr><th>วันที่</th><th>ผู้ปฏิบัติงาน</th><th>สถานะ</th><th>หมายเหตุ</th></tr></thead>
+            <tbody id="eq-pm-history-body">
+              <tr><td colspan="4" class="eq-hist-empty">⏳ กำลังโหลด...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: ประวัติซ่อม ── -->
+    <div class="eq-tab-body" id="eq-tab-repair">
+      <div class="pm-section">
+        <button class="eq-add-repair-btn" onclick="eqToggleRepairForm()">➕ เพิ่มรายการซ่อม</button>
+        <div class="eq-repair-form" id="eq-repair-form">
+          <div class="pm-row2">
+            <div>
+              <label>วันแจ้งซ่อม</label>
+              <input class="pm-input" id="eq-r-orderdate" type="date">
+            </div>
+            <div>
+              <label>เลขที่ใบแจ้งซ่อม</label>
+              <input class="pm-input" id="eq-r-jobnumber" type="text">
+            </div>
+          </div>
+          <div class="pm-row2" style="margin-top:10px;">
+            <div>
+              <label>วันแล้วเสร็จ</label>
+              <input class="pm-input" id="eq-r-finaldate" type="date">
+            </div>
+            <div>
+              <label>รหัสอะไหล่</label>
+              <input class="pm-input" id="eq-r-code" type="text">
+            </div>
+          </div>
+          <div class="pm-section" style="margin-top:10px;">
+            <label>รายการเปลี่ยนอะไหล่</label>
+            <input class="pm-input" id="eq-r-spareparts" type="text">
+          </div>
+          <div class="pm-section">
+            <label>สาเหตุ</label>
+            <textarea class="pm-note" id="eq-r-cause"></textarea>
+          </div>
+          <div class="pm-section">
+            <label>การดำเนินการแก้ไข</label>
+            <textarea class="pm-note" id="eq-r-solution"></textarea>
+          </div>
+          <button class="eq-mini-submit" onclick="eqSubmitRepair()">💾 บันทึกรายการซ่อม</button>
+        </div>
+      </div>
+      <div class="pm-section">
+        <label>ประวัติการซ่อม</label>
+        <table class="eq-hist-table">
+          <thead><tr><th>วันแจ้ง</th><th>วันเสร็จ</th><th>สาเหตุ</th><th>การแก้ไข</th></tr></thead>
+          <tbody id="eq-repair-history-body">
+            <tr><td colspan="4" class="eq-hist-empty">⏳ กำลังโหลด...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+  <div class="pm-foot">
+    <button class="pm-submit-btn" id="eq-submit-btn" onclick="eqSubmitTechData()">💾 บันทึกข้อมูลเครื่องจักร</button>
+  </div>
 </div>
 
 <div id="toast" class="">📋 PM บันทึกแล้ว — ✅ ดำเนินการได้</div>
@@ -15531,6 +15826,272 @@ function kpiRenderMonthly() {
   html += '</tbody></table></div>';
 
   body.innerHTML = html;
+}
+
+// ─── EQUIPMENT REGISTER (ทะเบียนประวัติเครื่องจักร) ──────
+// GS_EQUIP: URL ของ Apps Script Web App ใหม่ (Ray ต้อง deploy แยกแล้วใส่ตรงนี้)
+const GS_EQUIP = 'PASTE_YOUR_EQUIPMENT_REGISTER_APPS_SCRIPT_URL_HERE';
+// อ่านข้อมูล EQUIPMENT_TECH_DATA / REPAIR_LOG ผ่าน public CSV export (เหมือน EF_LOG)
+const EQ_TECH_CSV   = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent('EQUIPMENT_TECH_DATA')}`;
+const EQ_REPAIR_CSV = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent('REPAIR_LOG')}`;
+
+let eqSelIdx = null;
+const eqPhotos = [null, null, null];
+const EQ_PHOTO_LABELS = ['รหัสเครื่องจักร', 'หมายเลขครุภัณฑ์', 'เนมเพลท'];
+
+function eqShowTab(tab) {
+  ['info','pm','repair'].forEach(t => {
+    document.getElementById('eq-tab-' + t).classList.toggle('show', t === tab);
+    document.getElementById('eq-tab-btn-' + t).classList.toggle('sel', t === tab);
+  });
+}
+
+function eqPhotoCamera(idx) {
+  const fi = document.getElementById('eq-cam-' + idx);
+  fi.value = ''; fi.click();
+}
+function eqPhotoGallery(idx) {
+  const fi = document.getElementById('eq-gal-' + idx);
+  fi.value = ''; fi.click();
+}
+function eqPhotoClear(e, idx) {
+  if (e) e.stopPropagation();
+  eqPhotos[idx] = null;
+  const preview = document.getElementById('eq-preview-' + idx);
+  if (preview) preview.src = '';
+  const slot = document.getElementById('eq-slot-' + idx);
+  if (slot) slot.classList.remove('has-img');
+  ['eq-cam-','eq-gal-'].forEach(p => {
+    const fi = document.getElementById(p + idx);
+    if (fi) fi.value = '';
+  });
+}
+function eqPhotoStatus(msg, type='') {
+  const el = document.getElementById('eq-photo-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'pm-photo-status' + (type ? ' ' + type : '');
+}
+function eqPhotoSelected(idx, input) {
+  const file = input.files[0];
+  if (!file) return;
+  eqPhotoStatus('⏳ กำลังบีบอัดรูป...', 'uploading');
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const img = new Image();
+    img.onload = function() {
+      let w = img.width, h = img.height;
+      if (w > PHOTO_MAX_W) { h = Math.round(h * PHOTO_MAX_W / w); w = PHOTO_MAX_W; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const b64 = canvas.toDataURL('image/jpeg', PHOTO_QUALITY);
+      eqPhotos[idx] = b64;
+      const preview = document.getElementById('eq-preview-' + idx);
+      if (preview) preview.src = b64;
+      const slot = document.getElementById('eq-slot-' + idx);
+      if (slot) slot.classList.add('has-img');
+      const kb = Math.round(b64.length * 0.75 / 1024);
+      eqPhotoStatus('✅ ' + EQ_PHOTO_LABELS[idx] + ' — ' + kb + ' KB', 'done');
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function eqPhotosReset() {
+  [0,1,2].forEach(i => eqPhotoClear(null, i));
+  eqPhotoStatus('');
+}
+
+function openEquipForm() {
+  if (selIdx === null) return;
+  eqSelIdx = selIdx;
+  const r = RAW[eqSelIdx];
+  closeModal();
+
+  document.getElementById('eq-machine-label').textContent = r[0] + (r[4] ? ' — ' + r[4] : '');
+  document.getElementById('eq-machineid').value = r[0] || '';
+  document.getElementById('eq-asset').value = (r[1] && r[1].trim() !== 'ไม่มีหมายเลขครุภัณฑ์') ? r[1] : '-';
+  document.getElementById('eq-floorzone').value = `ชั้น ${r[6]} / โซน ${r[5]}`;
+  document.getElementById('eq-model').value = r[3] || '';
+  document.getElementById('eq-location').value = r[4] || '';
+  document.getElementById('eq-dept').value = r[7] || '';
+
+  // reset tech data fields (จะถูกเติมถ้ามีข้อมูลเดิมใน eqLoadTechData)
+  ['eq-brand','eq-tech-model','eq-serial','eq-supplier','eq-madeby','eq-rpm','eq-power','eq-voltage','eq-supply']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+
+  eqPhotosReset();
+  eqShowTab('info');
+  document.getElementById('eq-pm-history-body').innerHTML = '<tr><td colspan="4" class="eq-hist-empty">⏳ กำลังโหลด...</td></tr>';
+  document.getElementById('eq-repair-history-body').innerHTML = '<tr><td colspan="4" class="eq-hist-empty">⏳ กำลังโหลด...</td></tr>';
+  document.getElementById('eq-repair-form').classList.remove('show');
+
+  document.getElementById('equip-overlay').classList.add('show');
+  document.getElementById('equip-panel').classList.add('show');
+
+  eqLoadTechData(r[0]);
+  eqLoadPMHistory(r[0]);
+  eqLoadRepairHistory(r[0]);
+}
+
+function closeEquipPanel() {
+  document.getElementById('equip-overlay').classList.remove('show');
+  document.getElementById('equip-panel').classList.remove('show');
+}
+
+function eqToggleRepairForm() {
+  document.getElementById('eq-repair-form').classList.toggle('show');
+}
+
+// โหลดข้อมูลเทคนิค + รูปเดิม (ถ้ามี) จากชีต EQUIPMENT_TECH_DATA
+async function eqLoadTechData(machineId) {
+  try {
+    const res = await fetch(EQ_TECH_CSV + '&t=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) return;
+    const rows = parseCSV(await res.text());
+    const row = rows.find(r => (r['MachineID'] || '').trim() === machineId);
+    if (!row) return;
+    const map = {
+      'eq-brand':'Brand', 'eq-tech-model':'Model', 'eq-serial':'SerialNo',
+      'eq-supplier':'Supplier', 'eq-madeby':'MadeBy', 'eq-rpm':'RPM',
+      'eq-power':'Power', 'eq-voltage':'Voltage', 'eq-supply':'SupplySource'
+    };
+    Object.entries(map).forEach(([id, col]) => {
+      const el = document.getElementById(id);
+      if (el && row[col]) el.value = row[col];
+    });
+    const photoMap = { 0:'Photo_MachineCode_URL', 1:'Photo_AssetTag_URL', 2:'Photo_Nameplate_URL' };
+    Object.entries(photoMap).forEach(([idx, col]) => {
+      const url = row[col];
+      if (url) {
+        const preview = document.getElementById('eq-preview-' + idx);
+        const slot = document.getElementById('eq-slot-' + idx);
+        if (preview) preview.src = url;
+        if (slot) slot.classList.add('has-img');
+      }
+    });
+  } catch (e) {
+    console.warn('eqLoadTechData failed:', e.message);
+  }
+}
+
+// ดึงประวัติ PM ของเครื่องนี้จาก EF_LOG (ใช้ CSV เดิมที่มีอยู่แล้ว)
+async function eqLoadPMHistory(machineId) {
+  const body = document.getElementById('eq-pm-history-body');
+  try {
+    const res = await fetch(SHEETS_CSV + '&t=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const rows = parseCSV(await res.text()).filter(r => (r['หมายเลขเครื่องจักร'] || '').trim() === machineId);
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="4" class="eq-hist-empty">ยังไม่มีประวัติ PM</td></tr>';
+      return;
+    }
+    rows.reverse(); // ล่าสุดก่อน
+    body.innerHTML = rows.map(r => `<tr>
+      <td>${r['วันที่'] || '-'}</td>
+      <td>${r['ผู้ปฏิบัติงาน'] || '-'}</td>
+      <td>${r['สถานะ'] || '-'}</td>
+      <td>${r['หมายเหตุ'] || '-'}</td>
+    </tr>`).join('');
+  } catch (e) {
+    body.innerHTML = '<tr><td colspan="4" class="eq-hist-empty">⚠️ โหลดไม่สำเร็จ</td></tr>';
+    console.warn('eqLoadPMHistory failed:', e.message);
+  }
+}
+
+// ดึงประวัติซ่อมของเครื่องนี้จากชีต REPAIR_LOG
+async function eqLoadRepairHistory(machineId) {
+  const body = document.getElementById('eq-repair-history-body');
+  try {
+    const res = await fetch(EQ_REPAIR_CSV + '&t=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const rows = parseCSV(await res.text()).filter(r => (r['MachineID'] || '').trim() === machineId);
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="4" class="eq-hist-empty">ยังไม่มีประวัติซ่อม</td></tr>';
+      return;
+    }
+    rows.reverse();
+    body.innerHTML = rows.map(r => `<tr>
+      <td>${r['OrderDate'] || '-'}</td>
+      <td>${r['FinalDate'] || '-'}</td>
+      <td>${r['Cause'] || '-'}</td>
+      <td>${r['Solution'] || '-'}</td>
+    </tr>`).join('');
+  } catch (e) {
+    body.innerHTML = '<tr><td colspan="4" class="eq-hist-empty">⚠️ โหลดไม่สำเร็จ</td></tr>';
+    console.warn('eqLoadRepairHistory failed:', e.message);
+  }
+}
+
+async function eqSubmitTechData() {
+  if (eqSelIdx === null) return;
+  const machineId = RAW[eqSelIdx][0];
+  const btn = document.getElementById('eq-submit-btn');
+  btn.textContent = '⏳ กำลังบันทึก...'; btn.disabled = true;
+
+  const payload = {
+    action: 'save_equipment_tech_data',
+    machine_id: machineId,
+    brand: document.getElementById('eq-brand').value,
+    model: document.getElementById('eq-tech-model').value,
+    serial_no: document.getElementById('eq-serial').value,
+    supplier: document.getElementById('eq-supplier').value,
+    made_by: document.getElementById('eq-madeby').value,
+    rpm: document.getElementById('eq-rpm').value,
+    power: document.getElementById('eq-power').value,
+    voltage: document.getElementById('eq-voltage').value,
+    supply_source: document.getElementById('eq-supply').value,
+    photo_machine_code: eqPhotos[0] || '',
+    photo_asset_tag: eqPhotos[1] || '',
+    photo_nameplate: eqPhotos[2] || '',
+    updated_by: (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? currentUser.name : ''
+  };
+
+  try {
+    await fetch(GS_EQUIP, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    showToast('🗂 บันทึกข้อมูลเครื่องจักรแล้ว');
+  } catch (e) {
+    console.warn('eqSubmitTechData failed:', e.message);
+    showToast('⚠️ บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง', 'err');
+  }
+  btn.textContent = '💾 บันทึกข้อมูลเครื่องจักร'; btn.disabled = false;
+}
+
+async function eqSubmitRepair() {
+  if (eqSelIdx === null) return;
+  const machineId = RAW[eqSelIdx][0];
+  const payload = {
+    action: 'save_repair_log',
+    machine_id: machineId,
+    order_date: document.getElementById('eq-r-orderdate').value,
+    job_number: document.getElementById('eq-r-jobnumber').value,
+    final_date: document.getElementById('eq-r-finaldate').value,
+    code: document.getElementById('eq-r-code').value,
+    spare_parts: document.getElementById('eq-r-spareparts').value,
+    cause: document.getElementById('eq-r-cause').value,
+    solution: document.getElementById('eq-r-solution').value,
+    reported_by: (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? currentUser.name : ''
+  };
+  try {
+    await fetch(GS_EQUIP, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    showToast('🔧 บันทึกรายการซ่อมแล้ว');
+    ['eq-r-orderdate','eq-r-jobnumber','eq-r-finaldate','eq-r-code','eq-r-spareparts','eq-r-cause','eq-r-solution']
+      .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    document.getElementById('eq-repair-form').classList.remove('show');
+    setTimeout(() => eqLoadRepairHistory(machineId), 1500);
+  } catch (e) {
+    console.warn('eqSubmitRepair failed:', e.message);
+    showToast('⚠️ บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง', 'err');
+  }
 }
 
 // ─── TOAST ───────────────────────────────────────────────
