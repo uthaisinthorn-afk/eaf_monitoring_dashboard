@@ -14965,23 +14965,10 @@ function csvSplitRow(line) {
 }
 async function syncOrderStatus() {
   try {
-    const res = await fetch(ORDER_LOG_CSV + '&t=' + Date.now(), {cache: 'no-store'});
+    const res = await fetch(GS_URL + '?action=getOrderStatus&t=' + Date.now(), {cache: 'no-store'});
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    const csv = await res.text();
-    const lines = csv.trim().split('\n');
-    const newSet = new Set();
-    if (lines.length >= 2) {
-      const headers = csvSplitRow(lines[0]);
-      const midCol = headers.indexOf('MachineID');
-      const statusCol = headers.indexOf('Status');
-      for (let i = 1; i < lines.length; i++) {
-        if (!lines[i].trim()) continue;
-        const vals = csvSplitRow(lines[i]);
-        const mid = (vals[midCol] || '').trim();
-        const status = (vals[statusCol] || '').trim().toLowerCase();
-        if (mid && status === 'ordering') newSet.add(mid);
-      }
-    }
+    const json = await res.json();
+    const newSet = new Set((json.ordering || []).map(m => String(m).trim()));
     orderingSet = newSet;
     console.log('[ORDER_LOG] synced', orderingSet.size, 'machines ordering:', Array.from(orderingSet));
     render();
