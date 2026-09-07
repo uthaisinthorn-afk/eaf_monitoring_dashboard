@@ -114,8 +114,9 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 
 /* ── KEYCAP ── */
 .fkey.ordering{position:relative;}
-.fkey.ordering::after{content:'';position:absolute;top:3px;left:3px;right:3px;bottom:3px;
-  border:1.5px solid #ffd54a;border-radius:4px;pointer-events:none;}
+.fkey.ordering::after{content:'';position:absolute;top:2px;left:2px;right:2px;bottom:2px;
+  border:2px solid #ffd54a;border-radius:4px;pointer-events:none;
+  box-shadow:0 0 4px rgba(255,213,74,.7);z-index:2;}
 .fkey{position:relative;width:84px;height:52px;border-radius:6px;cursor:pointer;
   transition:transform .08s ease,box-shadow .08s ease;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
@@ -14949,19 +14950,40 @@ async function syncFromSheets() {
 }
 
 // ─── สถานะ "กำลังสั่งซื้อ" (sync ทั้งทีมผ่าน ORDER_LOG sheet) ──────
+function csvSplitRow(line) {
+  // parse หนึ่งแถว CSV แบบ char-by-char รองรับทั้งแบบมี/ไม่มี quote ครอบ
+  const vals = [];
+  let cur = '', inQ = false;
+  for (let c = 0; c < line.length; c++) {
+    const ch = line[c];
+    if (ch === '"') { inQ = !inQ; }
+    else if (ch === ',' && !inQ) { vals.push(cur.trim()); cur = ''; }
+    else { cur += ch; }
+  }
+  vals.push(cur.trim());
+  return vals;
+}
 async function syncOrderStatus() {
   try {
     const res = await fetch(ORDER_LOG_CSV + '&t=' + Date.now(), {cache: 'no-store'});
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const csv = await res.text();
-    const rows = parseCSV(csv); // แต่ละแถวเป็น object คีย์ตาม header: MachineID, Status, OrderedBy, OrderedAt
+    const lines = csv.trim().split('\n');
     const newSet = new Set();
-    rows.forEach(row => {
-      const mid = (row['MachineID'] || '').trim();
-      const status = (row['Status'] || '').trim().toLowerCase();
-      if (mid && status === 'ordering') newSet.add(mid);
-    });
+    if (lines.length >= 2) {
+      const headers = csvSplitRow(lines[0]);
+      const midCol = headers.indexOf('MachineID');
+      const statusCol = headers.indexOf('Status');
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        const vals = csvSplitRow(lines[i]);
+        const mid = (vals[midCol] || '').trim();
+        const status = (vals[statusCol] || '').trim().toLowerCase();
+        if (mid && status === 'ordering') newSet.add(mid);
+      }
+    }
     orderingSet = newSet;
+    console.log('[ORDER_LOG] synced', orderingSet.size, 'machines ordering:', Array.from(orderingSet));
     render();
     updateOrderBtnUI();
   } catch(err) {
