@@ -113,6 +113,9 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .key-grid{display:flex;flex-wrap:wrap;gap:7px;}
 
 /* ── KEYCAP ── */
+.fkey.ordering{position:relative;}
+.fkey.ordering::after{content:'';position:absolute;top:3px;left:3px;right:3px;bottom:3px;
+  border:1.5px solid #ffd54a;border-radius:4px;pointer-events:none;}
 .fkey{position:relative;width:84px;height:52px;border-radius:6px;cursor:pointer;
   transition:transform .08s ease,box-shadow .08s ease;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
@@ -295,6 +298,10 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
   border-radius:8px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;
   padding:11px 16px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;}
 .btn-defect:hover{background:rgba(255,110,0,.16);box-shadow:0 0 14px rgba(255,110,0,.25);}
+.btn-order{background:rgba(255,213,74,.08);border:1px solid rgba(255,213,74,.35);color:#ffd54a;
+  padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;}
+.btn-order:hover{background:rgba(255,213,74,.16);box-shadow:0 0 14px rgba(255,213,74,.25);}
+.btn-order.act{background:rgba(255,213,74,.28);border-color:#ffd54a;box-shadow:0 0 12px rgba(255,213,74,.4);}
 
 /* ── LEGEND ── */
 .legend{display:flex;gap:14px;flex-wrap:wrap;padding:8px 20px;border-top:1px solid var(--border);
@@ -13100,6 +13107,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
   <div class="leg-i"><div class="leg-k ok"></div>ปกติ</div>
   <div class="leg-i"><div class="leg-k broken"></div>ชำรุด</div>
   <div class="leg-i"><div class="leg-k pm"></div>กำลัง PM (กะพริบ)</div>
+  <div class="leg-i"><div class="leg-k ok" style="box-shadow:inset 0 0 0 1.5px #ffd54a;"></div>🛒 กำลังสั่งซื้อ</div>
   <div class="leg-i"><div class="leg-k unknown"></div>ไม่ทราบ</div>
   <div class="leg-i" style="margin-left:8px;color:#556;">| รุ่น (จุด LED กลางปุ่ม):</div>
   <div class="leg-i"><div class="leg-k ring-pink"></div>250X</div>
@@ -13149,6 +13157,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
       <button class="btn-open-pm" onclick="openPMForm()">📋 แบบฟอร์ม PM</button>
       <button class="btn-map-view" onclick="openMapFull()">🗺 แผนที่</button>
       <button class="btn-defect" onclick="openDefectForm()">🛠️ DEFECT</button>
+      <button class="btn-order" id="btn-order-toggle" onclick="toggleOrderStatus()">🛒 กำลังสั่งซื้อ</button>
       <button class="btn-open-pm" onclick="openEquipForm()">🗂 ทะเบียนประวัติ</button>
       <button class="btn-mclose" onclick="closeModal()">ปิด</button>
     </div>
@@ -13935,7 +13944,8 @@ function render() {
       const keys = filtered.map(i => {
         const st = getDisplayStatus(i);
         const ring = getModelRingClass(RAW[i][3]);
-        return `<button class="fkey ${st} ${ring}" onclick="openModal(${i})" title="${RAW[i][4]} | ${RAW[i][3]}">
+        const orderCls = orderingSet.has(RAW[i][0]) ? 'ordering' : '';
+        return `<button class="fkey ${st} ${ring} ${orderCls}" onclick="openModal(${i})" title="${RAW[i][4]} | ${RAW[i][3]}">
           <div class="kid">${RAW[i][0]}</div>
           <div class="kdot"></div>
         </button>`;
@@ -14641,6 +14651,7 @@ function openModal(i) {
   const ab = document.querySelector(`.sbtn.${selModalStatus==='broken'?'br':selModalStatus==='pm'?'pm':'ok'}`);
   if (ab) ab.classList.add('act');
 
+  updateOrderBtnUI();
   document.getElementById('modal').classList.add('show');
 }
 
@@ -14813,6 +14824,8 @@ const SHEETS_ID   = '1uuVVIjwGoIllCuHaceFyCLiNB-dXsYziOCLdGRKPIG4';
 const SHEETS_NAME = 'EF_LOG';
 // Public CSV export URL (ไม่ต้องใช้ API key)
 const SHEETS_CSV  = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEETS_NAME)}`;
+const ORDER_LOG_CSV = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent('ORDER_LOG')}`;
+let orderingSet = new Set(); // MachineID ที่กำลังสั่งซื้ออยู่ (sync จากทุกคนในทีม)
 
 let syncInterval = null;
 let lastSyncData = null; // เก็บ hash ของข้อมูลล่าสุด เพื่อเช็คว่ามีการเปลี่ยนแปลง
@@ -14932,6 +14945,70 @@ async function syncFromSheets() {
     setSyncStatus('err', '⚠️ เชื่อมต่อไม่ได้ — ' + err.message);
     console.warn('Sheets sync error:', err);
   }
+  syncOrderStatus();
+}
+
+// ─── สถานะ "กำลังสั่งซื้อ" (sync ทั้งทีมผ่าน ORDER_LOG sheet) ──────
+async function syncOrderStatus() {
+  try {
+    const res = await fetch(ORDER_LOG_CSV + '&t=' + Date.now(), {cache: 'no-store'});
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const csv = await res.text();
+    const rows = parseCSV(csv); // แต่ละแถวเป็น object คีย์ตาม header: MachineID, Status, OrderedBy, OrderedAt
+    const newSet = new Set();
+    rows.forEach(row => {
+      const mid = (row['MachineID'] || '').trim();
+      const status = (row['Status'] || '').trim().toLowerCase();
+      if (mid && status === 'ordering') newSet.add(mid);
+    });
+    orderingSet = newSet;
+    render();
+    updateOrderBtnUI();
+  } catch(err) {
+    console.warn('syncOrderStatus error:', err);
+  }
+}
+
+function updateOrderBtnUI() {
+  const btn = document.getElementById('btn-order-toggle');
+  if (!btn || selIdx === null) return;
+  const isOrdering = orderingSet.has(RAW[selIdx][0]);
+  btn.classList.toggle('act', isOrdering);
+  btn.textContent = isOrdering ? '🛒 ยกเลิกสั่งซื้อ' : '🛒 กำลังสั่งซื้อ';
+}
+
+async function toggleOrderStatus() {
+  if (selIdx === null) return;
+  const machineId = RAW[selIdx][0];
+  const isCurrentlyOrdering = orderingSet.has(machineId);
+  const newStatus = isCurrentlyOrdering ? 'cancelled' : 'ordering';
+
+  // อัปเดตทันทีในหน้าจอ (optimistic) ก่อนรอผลจากเซิร์ฟเวอร์
+  if (isCurrentlyOrdering) orderingSet.delete(machineId);
+  else orderingSet.add(machineId);
+  updateOrderBtnUI();
+  render();
+
+  const btn = document.getElementById('btn-order-toggle');
+  const orig = btn.textContent;
+  btn.textContent = '⏳ กำลังบันทึก...'; btn.disabled = true;
+  try {
+    await fetch(GS_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'toggle_order_status',
+        machine_id: machineId,
+        status: newStatus
+      })
+    });
+    showToast(newStatus === 'ordering' ? '🛒 มาร์กว่ากำลังสั่งซื้อแล้ว' : '✅ ยกเลิกสถานะสั่งซื้อแล้ว');
+  } catch(e) {
+    console.warn('toggleOrderStatus:', e.message);
+    showToast('⚠️ บันทึกไม่สำเร็จ ลองใหม่', 'warn');
+  }
+  btn.disabled = false;
+  updateOrderBtnUI();
 }
 
 function startAutoSync(intervalMs = 30000) {
