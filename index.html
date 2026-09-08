@@ -14970,6 +14970,13 @@ async function syncOrderStatus() {
     console.log('[ORDER_LOG] synced', orderingSet.size, 'machines ordering:', Array.from(orderingSet));
     render();
     updateOrderBtnUI();
+    // ── ตัวช่วยความเสถียร: re-render ซ้ำอีกครั้งหลังจากนี้เล็กน้อย
+    //    กันกรณี race condition กับ render() รอบอื่นที่อาจแทรกมาคาบเกี่ยว ──
+    setTimeout(() => {
+      render();
+      const appliedCount = document.querySelectorAll('.fkey.ordering').length;
+      console.log('[ORDER_LOG] re-render check: expect', orderingSet.size, 'tiles marked, actually found', appliedCount, 'in DOM');
+    }, 500);
   } catch(err) {
     console.warn('syncOrderStatus error:', err);
   }
