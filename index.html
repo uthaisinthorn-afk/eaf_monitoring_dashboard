@@ -113,7 +113,11 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .key-grid{display:flex;flex-wrap:wrap;gap:7px;}
 
 /* ── KEYCAP ── */
-.fkey.ordering{outline:2.5px solid #ffffff;outline-offset:2px;}
+.fkey.ordering .kdot{position:absolute;top:4px;right:4px;margin-top:0;}
+.order-label{position:absolute;bottom:2px;left:0;right:0;text-align:center;
+  font-family:'IBM Plex Mono',monospace;font-size:6.5px;font-weight:700;letter-spacing:.03em;
+  color:#1a1400;background:#ffd54a;border-radius:3px;padding:1px 2px;line-height:1.3;
+  pointer-events:none;}
 .fkey{position:relative;width:84px;height:52px;border-radius:6px;cursor:pointer;
   transition:transform .08s ease,box-shadow .08s ease;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
@@ -13106,7 +13110,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
   <div class="leg-i"><div class="leg-k ok"></div>ปกติ</div>
   <div class="leg-i"><div class="leg-k broken"></div>ชำรุด</div>
   <div class="leg-i"><div class="leg-k pm"></div>กำลัง PM (กะพริบ)</div>
-  <div class="leg-i"><div class="leg-k ok" style="outline:2.5px solid #ffffff;outline-offset:2px;"></div>🛒 กำลังสั่งซื้อ</div>
+  <div class="leg-i"><div class="leg-k ok" style="position:relative;overflow:visible;"><span style="position:absolute;bottom:-1px;left:0;right:0;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:5px;font-weight:700;color:#1a1400;background:#ffd54a;border-radius:2px;">ORDERING</span></div>กำลังสั่งซื้อ</div>
   <div class="leg-i"><div class="leg-k unknown"></div>ไม่ทราบ</div>
   <div class="leg-i" style="margin-left:8px;color:#556;">| รุ่น (จุด LED กลางปุ่ม):</div>
   <div class="leg-i"><div class="leg-k ring-pink"></div>250X</div>
@@ -13944,10 +13948,13 @@ function render() {
       const keys = filtered.map(i => {
         const st = getDisplayStatus(i);
         const ring = getModelRingClass(RAW[i][3]);
-        const orderCls = orderingSet.has(RAW[i][0]) ? 'ordering' : '';
+        const isOrdering = orderingSet.has(RAW[i][0]);
+        const orderCls = isOrdering ? 'ordering' : '';
+        const orderLabel = isOrdering ? '<div class="order-label">ORDERING</div>' : '';
         return `<button class="fkey ${st} ${ring} ${orderCls}" onclick="openModal(${i})" title="${RAW[i][4]} | ${RAW[i][3]}">
           <div class="kid">${RAW[i][0]}</div>
           <div class="kdot"></div>
+          ${orderLabel}
         </button>`;
       }).join('');
 
