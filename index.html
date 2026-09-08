@@ -113,13 +113,6 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .key-grid{display:flex;flex-wrap:wrap;gap:7px;}
 
 /* ── KEYCAP ── */
-.fkey.ordering{background:#ffd54a !important;}
-.fkey.ordering .kid{color:#1a1400 !important;}
-.fkey.ordering .kdot{position:absolute;top:4px;right:4px;margin-top:0;}
-.order-label{position:absolute;bottom:2px;left:0;right:0;text-align:center;
-  font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:800;letter-spacing:.03em;
-  color:#1a1400;line-height:1.3;
-  pointer-events:none;}
 .fkey{position:relative;width:84px;height:52px;border-radius:6px;cursor:pointer;
   transition:transform .08s ease,box-shadow .08s ease;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
@@ -13950,13 +13943,9 @@ function render() {
       const keys = filtered.map(i => {
         const st = getDisplayStatus(i);
         const ring = getModelRingClass(RAW[i][3]);
-        const isOrdering = orderingSet.has(RAW[i][0]);
-        const orderCls = isOrdering ? 'ordering' : '';
-        const orderLabel = isOrdering ? '<div class="order-label">ORDERING</div>' : '';
-        return `<button class="fkey ${st} ${ring} ${orderCls}" onclick="openModal(${i})" title="${RAW[i][4]} | ${RAW[i][3]}">
+        return `<button class="fkey ${st} ${ring}" data-mid="${RAW[i][0]}" onclick="openModal(${i})" title="${RAW[i][4]} | ${RAW[i][3]}">
           <div class="kid">${RAW[i][0]}</div>
           <div class="kdot"></div>
-          ${orderLabel}
         </button>`;
       }).join('');
 
@@ -14014,6 +14003,24 @@ function render() {
   c.innerHTML = visible ? parts.join('') :
     `<div class="empty"><div class="ei">🔍</div><div>ไม่พบเครื่องที่ตรงกับเงื่อนไข</div></div>`;
   updateStats();
+  applyOrderingStyles();
+}
+
+// ── เขียนสีเข้าไปที่ปุ่มโดยตรง (inline style) แทนการพึ่ง CSS class ──
+// เรียกทุกครั้งหลัง render() เพื่อให้ DOM ตรงกับ orderingSet เสมอ
+// ไม่ว่า render() จะถูกเรียกจากจุดไหนก็ตาม (เปลี่ยนชั้น/โซน, ข้อมูลอัปเดต, sync สั่งซื้อ)
+function applyOrderingStyles() {
+  document.querySelectorAll('.fkey[data-mid]').forEach(btn => {
+    const mid = btn.dataset.mid;
+    const kid = btn.querySelector('.kid');
+    if (orderingSet.has(mid)) {
+      btn.style.setProperty('background', '#ffd54a', 'important');
+      if (kid) kid.style.setProperty('color', '#1a1400', 'important');
+    } else {
+      btn.style.removeProperty('background');
+      if (kid) kid.style.removeProperty('color');
+    }
+  });
 }
 
 function togFloor(fl) {
@@ -14980,17 +14987,13 @@ async function syncOrderStatus() {
     const newSet = new Set((json.ordering || []).map(m => String(m).trim()));
     orderingSet = newSet;
     console.log('[ORDER_LOG] synced', orderingSet.size, 'machines ordering:', Array.from(orderingSet));
-    render();
+    applyOrderingStyles();
     updateOrderBtnUI();
-    if (dbg) dbg.textContent = '🛒 สั่งซื้อ: ' + orderingSet.size + ' เครื่อง (sync ' + new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) + ')';
-    // ── ตัวช่วยความเสถียร: re-render ซ้ำอีกครั้งหลังจากนี้เล็กน้อย
-    //    กันกรณี race condition กับ render() รอบอื่นที่อาจแทรกมาคาบเกี่ยว ──
-    setTimeout(() => {
-      render();
-      const appliedCount = document.querySelectorAll('.fkey.ordering').length;
-      console.log('[ORDER_LOG] re-render check: expect', orderingSet.size, 'tiles marked, actually found', appliedCount, 'in DOM');
-      if (dbg) dbg.textContent = '🛒 สั่งซื้อ: ' + orderingSet.size + ' เครื่อง | ขึ้นจริงในหน้าเว็บ: ' + appliedCount + ' เครื่อง';
-    }, 500);
+    const appliedCount = document.querySelectorAll('.fkey[data-mid]').length
+      ? Array.from(document.querySelectorAll('.fkey[data-mid]')).filter(b => orderingSet.has(b.dataset.mid)).length
+      : 0;
+    console.log('[ORDER_LOG] applied check: expect', orderingSet.size, 'tiles marked, actually styled', appliedCount, 'in DOM');
+    if (dbg) dbg.textContent = '🛒 สั่งซื้อ: ' + orderingSet.size + ' เครื่อง | ขึ้นจริงในหน้าเว็บ: ' + appliedCount + ' เครื่อง';
   } catch(err) {
     console.warn('syncOrderStatus error:', err);
     if (dbg) dbg.textContent = '⚠️ สั่งซื้อ sync ผิดพลาด: ' + err.message;
@@ -15015,7 +15018,7 @@ async function toggleOrderStatus() {
   if (isCurrentlyOrdering) orderingSet.delete(machineId);
   else orderingSet.add(machineId);
   updateOrderBtnUI();
-  render();
+  applyOrderingStyles();
 
   const btn = document.getElementById('btn-order-toggle');
   const orig = btn.textContent;
