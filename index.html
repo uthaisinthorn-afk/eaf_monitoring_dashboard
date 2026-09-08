@@ -113,10 +113,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .key-grid{display:flex;flex-wrap:wrap;gap:7px;}
 
 /* ── KEYCAP ── */
-.fkey.ordering{position:relative;}
-.fkey.ordering::after{content:'';position:absolute;top:2px;left:2px;right:2px;bottom:2px;
-  border:2px solid #ffd54a;border-radius:4px;pointer-events:none;
-  box-shadow:0 0 4px rgba(255,213,74,.7);z-index:2;}
+.fkey.ordering{outline:2.5px solid #ffffff;outline-offset:2px;}
 .fkey{position:relative;width:84px;height:52px;border-radius:6px;cursor:pointer;
   transition:transform .08s ease,box-shadow .08s ease;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
@@ -13108,7 +13105,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
   <div class="leg-i"><div class="leg-k ok"></div>ปกติ</div>
   <div class="leg-i"><div class="leg-k broken"></div>ชำรุด</div>
   <div class="leg-i"><div class="leg-k pm"></div>กำลัง PM (กะพริบ)</div>
-  <div class="leg-i"><div class="leg-k ok" style="box-shadow:inset 0 0 0 1.5px #ffd54a;"></div>🛒 กำลังสั่งซื้อ</div>
+  <div class="leg-i"><div class="leg-k ok" style="outline:2.5px solid #ffffff;outline-offset:2px;"></div>🛒 กำลังสั่งซื้อ</div>
   <div class="leg-i"><div class="leg-k unknown"></div>ไม่ทราบ</div>
   <div class="leg-i" style="margin-left:8px;color:#556;">| รุ่น (จุด LED กลางปุ่ม):</div>
   <div class="leg-i"><div class="leg-k ring-pink"></div>250X</div>
