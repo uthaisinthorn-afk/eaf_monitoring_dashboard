@@ -964,6 +964,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
     <div class="sync-dot" id="syncDot"></div>
     <span id="syncText">กำลังเชื่อมต่อ Google Sheets...</span>
     <span id="syncTime" style="margin-left:auto;color:#4a6a5a;"></span>
+    <span id="orderSyncDebug" style="margin-left:14px;color:#ffd54a;font-family:'IBM Plex Mono',monospace;font-size:11px;"></span>
   </div>
 </div>
 <div class="ctrl">
@@ -14961,7 +14962,9 @@ function csvSplitRow(line) {
   return vals;
 }
 async function syncOrderStatus() {
+  const dbg = document.getElementById('orderSyncDebug');
   try {
+    if (dbg) dbg.textContent = '🛒 กำลังโหลดสถานะสั่งซื้อ...';
     const res = await fetch(GS_URL + '?action=getOrderStatus&t=' + Date.now(), {cache: 'no-store'});
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const json = await res.json();
@@ -14970,15 +14973,18 @@ async function syncOrderStatus() {
     console.log('[ORDER_LOG] synced', orderingSet.size, 'machines ordering:', Array.from(orderingSet));
     render();
     updateOrderBtnUI();
+    if (dbg) dbg.textContent = '🛒 สั่งซื้อ: ' + orderingSet.size + ' เครื่อง (sync ' + new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) + ')';
     // ── ตัวช่วยความเสถียร: re-render ซ้ำอีกครั้งหลังจากนี้เล็กน้อย
     //    กันกรณี race condition กับ render() รอบอื่นที่อาจแทรกมาคาบเกี่ยว ──
     setTimeout(() => {
       render();
       const appliedCount = document.querySelectorAll('.fkey.ordering').length;
       console.log('[ORDER_LOG] re-render check: expect', orderingSet.size, 'tiles marked, actually found', appliedCount, 'in DOM');
+      if (dbg) dbg.textContent = '🛒 สั่งซื้อ: ' + orderingSet.size + ' เครื่อง | ขึ้นจริงในหน้าเว็บ: ' + appliedCount + ' เครื่อง';
     }, 500);
   } catch(err) {
     console.warn('syncOrderStatus error:', err);
+    if (dbg) dbg.textContent = '⚠️ สั่งซื้อ sync ผิดพลาด: ' + err.message;
   }
 }
 
