@@ -14946,7 +14946,7 @@ function parseCSV(csv) {
 function applySheetData(rows) {
   if (!rows || rows.length === 0) return false;
 
-  const dataHash = JSON.stringify(rows.map(r => r['หมายเลขเครื่องจักร'] + '|' + r['สถานะ'] + '|' + r['หมายเลขครุภัณฑ์'] + '|' + r['วันที่']));
+  const dataHash = JSON.stringify(rows.map(r => r['หมายเลขเครื่องจักร'] + '|' + r['สถานะ'] + '|' + r['หมายเลขครุภัณฑ์'] + '|' + r['วันที่'] + '|' + r['สถานะสั่งซื้อ']));
   if (dataHash === lastSyncData) return false; // ไม่มีการเปลี่ยนแปลง
   lastSyncData = dataHash;
 
@@ -14985,14 +14985,22 @@ function applySheetData(rows) {
       pmSet.add(idx);
     }
 
-    // อัพเดทเลขครุภัณฑ์ถ้ามี
+      // อัพเดทเลขครุภัณฑ์ถ้ามี
     const asset = (row['หมายเลขครุภัณฑ์'] || '').trim();
     if (asset && asset !== 'ไม่มีหมายเลขครุภัณฑ์') {
       RAW[idx][1] = asset;
     }
 
+    // อัพเดทสถานะสั่งซื้อ — อ่านจากคอลัมน์เดียวกับข้อมูล PM เลย
+    const ordering = (row['สถานะสั่งซื้อ'] || '').trim();
+    if (ordering === 'ordering') orderingSet.add(machineId);
+    else orderingSet.delete(machineId);
+
     changed = true;
   });
+
+  applyOrderingStyles();
+  updateOrderBtnUI();
 
   if (changed) {
     saveOverrides(); savePMSet();
@@ -15014,8 +15022,7 @@ async function syncFromSheets() {
   } catch(err) {
     setSyncStatus('err', '⚠️ เชื่อมต่อไม่ได้ — ' + err.message);
     console.warn('Sheets sync error:', err);
-  }
-  syncOrderStatus();
+
   checkBrokenListChanges();
 }
 
