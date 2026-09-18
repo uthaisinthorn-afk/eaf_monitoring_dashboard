@@ -15022,7 +15022,7 @@ async function syncFromSheets() {
   } catch(err) {
     setSyncStatus('err', '⚠️ เชื่อมต่อไม่ได้ — ' + err.message);
     console.warn('Sheets sync error:', err);
-
+}
   checkBrokenListChanges();
 }
 
