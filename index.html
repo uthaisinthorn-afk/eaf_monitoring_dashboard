@@ -379,6 +379,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .pm-st-btn.ok:hover,.pm-st-btn.ok.sel{border-color:#00ff50;background:rgba(0,255,80,.08);color:#00ff50;}
 .pm-st-btn.br:hover,.pm-st-btn.br.sel{border-color:#ff4444;background:rgba(255,68,68,.08);color:#ff4444;}
 .pm-st-btn.un:hover,.pm-st-btn.un.sel{border-color:#ffd700;background:rgba(255,215,0,.08);color:#ffd700;}
+.pm-st-btn.ord:hover,.pm-st-btn.ord.sel{border-color:#ff9800;background:rgba(255,152,0,.08);color:#ff9800;}
 .pm-checklist{display:flex;flex-direction:column;gap:8px;}
 .pm-round-row{display:flex;gap:10px;}
 .pm-round-btn{flex:1;padding:10px;border-radius:10px;border:1.5px solid #3a3a3a;background:#1c1c1c;color:#ccc;font-weight:600;cursor:pointer;text-align:center;}
@@ -13297,6 +13298,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
         <button class="pm-st-btn ok sel" onclick="pmSetStatus('ok',this)"><span class="pm-si">✅</span>ดำเนินได้</button>
         <button class="pm-st-btn br" onclick="pmSetStatus('broken',this)"><span class="pm-si">🔴</span>ชำรุด</button>
         <button class="pm-st-btn un" onclick="pmSetStatus('unavail',this)"><span class="pm-si">🚫</span>ไม่สะดวก</button>
+        <button class="pm-st-btn ord" onclick="pmSetStatus('order',this)"><span class="pm-si">🛒</span>รอสั่งซื้ออะไหล่</button>
       </div>
     </div>
 
@@ -14885,7 +14887,7 @@ function pmPhotosReset() {
 }
 function pmPhotoSectionVisible(status) {
   const sec = document.getElementById('pm-photo-section');
-  if (sec) sec.style.display = (status === 'ok' || status === 'broken') ? '' : 'none';
+  if (sec) sec.style.display = (status === 'ok' || status === 'broken' || status === 'order') ? '' : 'none';
 }
 
 // ─── PM PANEL ────────────────────────────────────────────
@@ -14946,7 +14948,7 @@ function parseCSV(csv) {
 function applySheetData(rows) {
   if (!rows || rows.length === 0) return false;
 
-  const dataHash = JSON.stringify(rows.map(r => r['หมายเลขเครื่องจักร'] + '|' + r['สถานะ'] + '|' + r['หมายเลขครุภัณฑ์'] + '|' + r['วันที่'] + '|' + r['สถานะสั่งซื้อ']));
+  const dataHash = JSON.stringify(rows.map(r => r['หมายเลขเครื่องจักร'] + '|' + r['สถานะ'] + '|' + r['หมายเลขครุภัณฑ์'] + '|' + r['วันที่']));
   if (dataHash === lastSyncData) return false; // ไม่มีการเปลี่ยนแปลง
   lastSyncData = dataHash;
 
@@ -14985,22 +14987,14 @@ function applySheetData(rows) {
       pmSet.add(idx);
     }
 
-      // อัพเดทเลขครุภัณฑ์ถ้ามี
+    // อัพเดทเลขครุภัณฑ์ถ้ามี
     const asset = (row['หมายเลขครุภัณฑ์'] || '').trim();
     if (asset && asset !== 'ไม่มีหมายเลขครุภัณฑ์') {
       RAW[idx][1] = asset;
     }
 
-    // อัพเดทสถานะสั่งซื้อ — อ่านจากคอลัมน์เดียวกับข้อมูล PM เลย
-    const ordering = (row['สถานะสั่งซื้อ'] || '').trim();
-    if (ordering === 'ordering') orderingSet.add(machineId);
-    else orderingSet.delete(machineId);
-
     changed = true;
   });
-
-  applyOrderingStyles();
-  updateOrderBtnUI();
 
   if (changed) {
     saveOverrides(); savePMSet();
@@ -15022,7 +15016,8 @@ async function syncFromSheets() {
   } catch(err) {
     setSyncStatus('err', '⚠️ เชื่อมต่อไม่ได้ — ' + err.message);
     console.warn('Sheets sync error:', err);
-}
+  }
+  syncOrderStatus();
   checkBrokenListChanges();
 }
 
@@ -15147,6 +15142,27 @@ async function toggleOrderStatus() {
   }
   btn.disabled = false;
   updateOrderBtnUI();
+}
+
+// ── sync สถานะ "รอสั่งซื้ออะไหล่" จากฟอร์ม PM เข้า ORDER_LOG (เหมือน toggleOrderStatus แต่ไม่พึ่ง selIdx) ──
+async function pmSyncOrderLog(machineId) {
+  if (!machineId) return;
+  orderingSet.add(machineId);
+  applyOrderingStyles();
+  updateOrderBtnUI();
+  try {
+    await fetch(GS_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'toggle_order_status',
+        machine_id: machineId,
+        status: 'ordering'
+      })
+    });
+  } catch(e) {
+    console.warn('pmSyncOrderLog:', e.message);
+  }
 }
 
 function startAutoSync(intervalMs = 30000) {
@@ -15310,7 +15326,7 @@ function initAuth() {
   document.getElementById('loginOverlay').style.display = 'flex';
 }
 
-const GS_PM = 'https://script.google.com/macros/s/AKfycbwFCPptosw338HRBE7abJFsVVa_0YfD6TS-gfJtNMv_D8h1zgT89XZN3ycWQN4zzsQe/exec';
+const GS_PM = 'https://script.google.com/macros/s/AKfycbwBSFhK6PPjJXhFucWjUqsil9lqprlbCDJx7tCBOQBFIft5qmly8Xa9EVJJOOEdIfY/exec';
 // ── Shared backend (doGet endpoint) ──────────────────────
 const GS_URL = 'https://script.google.com/macros/s/AKfycbz5YxCFkJhppgMCGRIu26AouwsFstwSAZpnH7wj0j9Ab8p3pTuqkmjYzdR-_-ppTmKn/exec';
 
@@ -15716,7 +15732,7 @@ async function pmDoSubmit() {
     }
     saveOverrides(); savePMSet();
     render();
-    const stMap2 = {ok:'✅ ดำเนินการได้', broken:'🔴 เครื่องชำรุด/รออะไหล่', unavail:'🚫 เจ้าหน้าที่ไม่สะดวก'};
+    const stMap2 = {ok:'✅ ดำเนินการได้', broken:'🔴 เครื่องชำรุด/รออะไหล่', unavail:'🚫 เจ้าหน้าที่ไม่สะดวก', order:'🛒 รอสั่งซื้ออะไหล่'};
     showToast('📋 PM บันทึกแล้ว — ' + (stMap2[pmStatus]||pmStatus));
   }
 
@@ -15724,7 +15740,11 @@ async function pmDoSubmit() {
   setTimeout(() => { closePMPanel(); btn.textContent = '📤 ส่งแบบฟอร์ม PM'; btn.disabled = false; }, 600);
 
   // ── ส่ง Google Sheets แบบ background ──
-  const stMap = {ok:'✅ ดำเนินการได้', broken:'🔴 เครื่องชำรุด/รออะไหล่', unavail:'🚫 เจ้าหน้าที่ไม่สะดวก'};
+  const stMap = {ok:'✅ ดำเนินการได้', broken:'🔴 เครื่องชำรุด/รออะไหล่', unavail:'🚫 เจ้าหน้าที่ไม่สะดวก', order:'🛒 รอสั่งซื้ออะไหล่'};
+  // สถานะ "รอสั่งซื้ออะไหล่" → sync เข้า ORDER_LOG อัตโนมัติ (เหมือนกดปุ่ม 🛒 กำลังสั่งซื้อ)
+  if (pmStatus === 'order' && pmSelIdx !== null) {
+    pmSyncOrderLog(RAW[pmSelIdx][0]);
+  }
   const payload = {
     date:         document.getElementById('pm-date').value,
     floor:        document.getElementById('pm-floor').value,
