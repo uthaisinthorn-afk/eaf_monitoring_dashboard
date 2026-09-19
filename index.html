@@ -13910,6 +13910,12 @@ window.onload = () => {
     if (syncText) syncText.textContent = 'ไม่สามารถโหลดจาก Sheet ได้';
   });
 
+  // ── โหลดสถานะ "กำลังสั่งซื้อ" (ORDER_LOG) ตอนเปิดหน้า + รีเฟรชทุก 30 วิ ──
+  // (แก้บั๊ก: เดิม syncOrderStatus() ไม่เคยถูกเรียกตอนโหลดหน้า ทำให้วงแหวนเหลืองหายหลัง F5)
+  syncOrderStatus();
+  if (syncInterval) clearInterval(syncInterval);
+  syncInterval = setInterval(syncOrderStatus, 30000);
+
   // Auto-refresh ทุก 5 นาที
   setInterval(() => {
     if (syncDot) syncDot.className = 'sync-dot syncing';
