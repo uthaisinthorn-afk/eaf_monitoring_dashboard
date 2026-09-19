@@ -295,10 +295,6 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
   border-radius:8px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;
   padding:11px 16px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;}
 .btn-defect:hover{background:rgba(255,110,0,.16);box-shadow:0 0 14px rgba(255,110,0,.25);}
-.btn-cancel-order{background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.35);color:#ff4444;
-  border-radius:8px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;
-  padding:11px 16px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;}
-.btn-cancel-order:hover{background:rgba(255,68,68,.16);box-shadow:0 0 14px rgba(255,68,68,.25);}
 
 /* ── LEGEND ── */
 .legend{display:flex;gap:14px;flex-wrap:wrap;padding:8px 20px;border-top:1px solid var(--border);
@@ -13177,7 +13173,6 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
       <button class="btn-open-pm" onclick="openPMForm()">📋 แบบฟอร์ม PM</button>
       <button class="btn-map-view" onclick="openMapFull()">🗺 แผนที่</button>
       <button class="btn-defect" onclick="openDefectForm()">🛠️ DEFECT</button>
-      <button class="btn-cancel-order" id="btn-order-cancel" onclick="cancelOrderStatus()" style="display:none;">❌ ยกเลิกสั่งซื้อ</button>
       <button class="btn-open-pm" onclick="openEquipForm()">🗂 ทะเบียนประวัติ</button>
       <button class="btn-mclose" onclick="closeModal()">ปิด</button>
     </div>
@@ -15110,35 +15105,12 @@ async function syncOrderStatus(attempt = 1) {
   }
 }
 
-// ควบคุมการโชว์/ซ่อนปุ่ม ❌ ยกเลิกสั่งซื้อ ในหน้ารายละเอียดเครื่อง (โชว์เฉพาะเครื่องที่กำลังสั่งซื้ออยู่จริง)
 function updateOrderBtnUI() {
-  const btn = document.getElementById('btn-order-cancel');
+  const btn = document.getElementById('btn-order-toggle');
   if (!btn || selIdx === null) return;
   const isOrdering = orderingSet.has(RAW[selIdx][0]);
-  btn.style.display = isOrdering ? 'flex' : 'none';
-}
-
-// ── ยกเลิกสถานะ "กำลังสั่งซื้อ" ของเครื่องที่เลือกอยู่ (กดแล้วยกเลิกทันที ไม่มีกล่องยืนยัน) ──
-async function cancelOrderStatus() {
-  if (selIdx === null) return;
-  const machineId = RAW[selIdx][0];
-  orderingSet.delete(machineId);
-  applyOrderingStyles();
-  updateOrderBtnUI();
-  showToast('❌ ยกเลิกสถานะกำลังสั่งซื้อแล้ว');
-  try {
-    await fetch(GS_URL, {
-      method: 'POST', mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'toggle_order_status',
-        machine_id: machineId,
-        status: 'cancelled'
-      })
-    });
-  } catch(e) {
-    console.warn('cancelOrderStatus:', e.message);
-  }
+  btn.classList.toggle('act', isOrdering);
+  btn.textContent = isOrdering ? '🛒 สั่งซื้อแล้ว' : '🛒 กำลังสั่งซื้อ';
 }
 
 // ── sync สถานะ "รอสั่งซื้ออะไหล่" จากฟอร์ม PM เข้า ORDER_LOG (เหมือน toggleOrderStatus แต่ไม่พึ่ง selIdx) ──
