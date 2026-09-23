@@ -60,7 +60,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .stat{flex-shrink:0;background:var(--surface);border:1px solid var(--border2);border-radius:9px;padding:10px 18px;text-align:center;min-width:100px;}
 .stat .n{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;line-height:1;}
 .stat .l{font-size:10px;color:var(--muted);margin-top:4px;}
-.stat.total .n{color:var(--info)}.stat.ok .n{color:var(--success)}.stat.br .n{color:var(--danger)}.stat.pm .n{color:var(--warning)}.stat.un .n{color:var(--muted)}.stat.hasid .n{color:#a78bfa}.stat.noid .n{color:#fb923c}
+.stat.total .n{color:var(--info)}.stat.ok .n{color:var(--success)}.stat.br .n{color:var(--danger)}.stat.pm .n{color:var(--warning)}.stat.un .n{color:var(--muted)}.stat.hasid .n{color:#a78bfa}.stat.noid .n{color:#fb923c}.stat.ordering .n{color:#ffd54a}
 
 /* ── CONTROLS ── */
 .ctrl{display:flex;align-items:center;gap:10px;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap;}
@@ -974,6 +974,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
   <div class="stat un"><div class="n" id="s-un">1341</div><div class="l">⬜ ไม่ทราบ</div></div>
   <div class="stat hasid"><div class="n" id="s-hasid">2009</div><div class="l">🏷 มีหมายเลขครุภัณฑ์</div></div>
   <div class="stat noid"><div class="n" id="s-noid">1836</div><div class="l">🔲 ไม่มีหมายเลขครุภัณฑ์</div></div>
+  <div class="stat ordering"><div class="n" id="s-ordering">0</div><div class="l">🛒 กำลังสั่งซื้อ</div></div>
 </div>
 
 <!-- GLOBAL MODEL SUMMARY: สรุปจำนวนพัดลมแต่ละรุ่นรวมทุกชั้น (อยู่ใต้ dashboard สรุปด้านบน) -->
@@ -14084,6 +14085,8 @@ function applyOrderingStyles() {
       if (kid) kid.style.removeProperty('color');
     }
   });
+  const stEl = document.getElementById('s-ordering');
+  if (stEl) stEl.textContent = orderingSet.size;
 }
 
 function togFloor(fl) {
