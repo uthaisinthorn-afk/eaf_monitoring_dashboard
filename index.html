@@ -2,7 +2,18 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EAF Monitoring Dashboard</title>
-<link href="./EAF Monitoring Dashboard_files/css2" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#080c14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="EAF PM">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
 <style>
 :root {
   --bg:#080c14; --surface:#0e1420; --card:#111827; --border:#1c2a3a; --border2:#243040;
@@ -14950,6 +14961,17 @@ function parseCSV(csv) {
   return rows;
 }
 
+// ปรับชื่อรุ่นจาก Sheet ให้เป็นรูปแบบเดียวกับ Dashboard
+// เช่น "Kruger KCE-250X" → 250X, "160x" → 160X, "Kruger FSA200D" → FSA200D, "20 CFM" → 20CFM
+function normalizeModel(m) {
+  return String(m || '').trim()
+    .replace(/^kruger\s+/i, '')
+    .replace(/^KCE-?(\d+X)$/i, '$1')
+    .replace(/^KCE-(\d+)$/i, 'KCE$1')
+    .replace(/^(\d+)\s*CFM$/i, '$1CFM')
+    .replace(/^(\d+)x$/i, '$1X');
+}
+
 // แปลง Sheets rows → อัพเดท overrides ใน Dashboard
 function applySheetData(rows) {
   if (!rows || rows.length === 0) return false;
@@ -14999,8 +15021,8 @@ function applySheetData(rows) {
       RAW[idx][1] = asset;
     }
 
-    // อัพเดทรุ่นเครื่องตาม record ล่าสุดใน Sheet (เช่น 160x → 160X)
-    const model = (row['รุ่นเครื่อง'] || '').trim().replace(/^(\d+)x$/i, '$1X');
+    // อัพเดทรุ่นเครื่องตาม record ล่าสุดใน Sheet
+    const model = normalizeModel(row['รุ่นเครื่อง']);
     if (model) {
       RAW[idx][3] = model;
     }
@@ -15348,7 +15370,7 @@ async function loadStatusFromSheet() {
       if (!mid) return;
       // เก็บแถวล่าสุดของแต่ละ machine_id
       if (!statusMap[mid] || log.date >= statusMap[mid].date) {
-        statusMap[mid] = { status: log.status, date: log.date, asset: log.asset_no };
+        statusMap[mid] = { status: log.status, date: log.date, asset: log.asset_no, model: log.model };
       }
     });
 
@@ -15366,6 +15388,9 @@ async function loadStatusFromSheet() {
     RAW.forEach((r, i) => {
       const mid = (r[0] || '').trim(); // r[0] = machine_id
       if (statusMap[mid]) {
+        // รุ่นเครื่องตาม record ล่าสุดใน Sheet
+        const model = normalizeModel(statusMap[mid].model);
+        if (model) r[3] = model;
         const key = labelToKey(statusMap[mid].status);
         if (key) {
           overrides[i] = key;
@@ -17378,4 +17403,11 @@ async function dtApiCall(payload) {
 }
 </script>
 
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function (e) { console.warn('SW register failed', e); });
+  });
+}
+</script>
 </body></html>
