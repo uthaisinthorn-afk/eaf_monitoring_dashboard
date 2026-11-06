@@ -2,18 +2,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EAF Monitoring Dashboard</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<!-- PWA -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#080c14">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="EAF PM">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link href="./EAF Monitoring Dashboard_files/css2" rel="stylesheet">
 <style>
 :root {
   --bg:#080c14; --surface:#0e1420; --card:#111827; --border:#1c2a3a; --border2:#243040;
@@ -14350,6 +14339,12 @@ async function defectDoSubmit() {
   };
 
   showToast('🛠️ บันทึกการแจ้งปัญหาแล้ว');
+  jobTrackReport({
+    id: payload.machine_id, source: 'DEFECT', reporter: payload.reporter, label: '🛠️ แจ้ง DEFECT (' + payload.urgency + ')',
+    location: jobTrackLoc(payload.floor, payload.zone, payload.location),
+    detail: ['ระบบ: พัดลมดูดอากาศ (EAF)', 'แจ้ง DEFECT — ความเร่งด่วน: ' + payload.urgency, payload.detail].join('\n'),
+    photos: [payload.photo]
+  });
   setTimeout(() => { closeDefectPanel(); btn.textContent = '🛠️ บันทึกการแจ้งปัญหา'; btn.disabled = false; }, 600);
 
   try {
@@ -15355,6 +15350,21 @@ const GS_PM = 'https://script.google.com/macros/s/AKfycbz5YxCFkJhppgMCGRIu26Aouw
 // ── Shared backend (doGet endpoint) ──────────────────────
 const GS_URL = 'https://script.google.com/macros/s/AKfycbz5YxCFkJhppgMCGRIu26AouwsFstwSAZpnH7wj0j9Ab8p3pTuqkmjYzdR-_-ppTmKn/exec';
 
+// ── เชื่อมระบบติดตามงาน: ส่ง PM ชำรุด/รอสั่งอะไหล่ และแจ้ง DEFECT ให้หัวหน้าช่างรับเรื่อง (เว้น URL ว่าง = ปิด) ──
+const JOB_TRACKING_URL = 'https://script.google.com/macros/s/AKfycbzIWM6HQZbQuifxIIFuLZUxm-LFUOZiSC5qMNG7PNKJuaalrm-iyf8KjsK6HdM7Vgca/exec';
+const JOB_TRACKING_KEY = '';
+const JOB_TRACK_SYSTEM = 'พัดลมดูดอากาศ', JOB_TRACK_TYPE = 'พัดลมดูดอากาศชำรุด';
+function jobTrackReport(o) {
+  if (!JOB_TRACKING_URL || !o || !o.id) return;
+  const body = { action: 'reportFromPM', key: JOB_TRACKING_KEY, system: JOB_TRACK_SYSTEM, source: o.source || 'ฟอร์ม PM',
+    machine_id: o.id, type: JOB_TRACK_TYPE, location: o.location || '', detail: o.detail || '', reporter: o.reporter || '-',
+    status_label: o.label || '', photos: (o.photos || []).filter(p => typeof p === 'string' && p).slice(0, 3) };
+  fetch(JOB_TRACKING_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
+    .then(() => setTimeout(() => showToast('📨 ส่งเรื่องเข้าระบบติดตามงานแล้ว (รอหัวหน้าช่างรับเรื่อง)'), 2600))
+    .catch(e => console.warn('job tracking report failed:', e.message));
+}
+function jobTrackLoc(floor, zone, loc) { return 'ชั้น ' + (floor || '-') + (zone ? ' โซน ' + zone : '') + ' · ' + (loc || '-'); }
+
 // โหลดสถานะจาก Sheet แล้ว merge เข้า overrides + pmSet
 async function loadStatusFromSheet() {
   try {
@@ -15790,6 +15800,16 @@ async function pmDoSubmit() {
     photo_asset:   pmPhotos[1] || '',
     photo_location:pmPhotos[2] || ''
   };
+
+  if (['broken', 'order'].includes(payload.work_status)) {
+    jobTrackReport({
+      id: payload.machine_id, reporter: payload.operator, label: payload.status_label,
+      location: jobTrackLoc(payload.floor, payload.zone, payload.location),
+      detail: ['ระบบ: พัดลมดูดอากาศ (EAF)', 'ผลตรวจ PM วันที่ ' + payload.date + ' — ' + payload.status_label,
+        payload.remark ? 'หมายเหตุ: ' + payload.remark : '', payload.machine_no ? 'รุ่น: ' + payload.machine_no : ''].filter(Boolean).join('\n'),
+      photos: [payload.photo_machine, payload.photo_location, payload.photo_asset]
+    });
+  }
 
   try {
     await fetch(GS_PM, {
@@ -17403,11 +17423,4 @@ async function dtApiCall(payload) {
 }
 </script>
 
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function () {
-    navigator.serviceWorker.register('sw.js').catch(function (e) { console.warn('SW register failed', e); });
-  });
-}
-</script>
 </body></html>
