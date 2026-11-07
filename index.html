@@ -595,6 +595,23 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .broken-row-id{font-family:'IBM Plex Mono',monospace;font-weight:700;color:#ff8080;font-size:13px;min-width:100px;}
 .broken-row-model{font-size:12px;color:#e8f0f0;min-width:60px;}
 .broken-row-loc{font-size:11.5px;color:#8a93b8;flex:1;}
+/* ➕ เพิ่มพัดลมดูดอากาศ (เครื่องที่ไม่มีในระบบ) */
+.af-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;}
+.af-grid .af-full{grid-column:1 / -1;}
+.af-field label{display:block;font-size:12px;color:#8ab4c8;margin-bottom:4px;}
+.af-field label b{color:#ff6b6b;}
+.af-field .add-user-input{width:100%;box-sizing:border-box;min-width:0;}
+.af-field select.add-user-input option{background:#111827;color:#d0e8f0;}
+.af-hint{font-size:11.5px;color:#8a93b8;margin-top:12px;line-height:1.6;}
+.af-err{color:#ff6b6b;font-size:12.5px;margin-top:8px;min-height:16px;}
+.af-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:6px;flex-wrap:wrap;}
+.af-list-title{font-size:13px;font-weight:700;color:#00e5ff;margin:18px 0 6px;}
+.af-row{display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px solid rgba(255,255,255,.06);}
+.af-row-id{font-family:'IBM Plex Mono',monospace;font-weight:700;color:#7ee8a0;font-size:13px;min-width:96px;cursor:pointer;}
+.af-row-info{font-size:11.5px;color:#8a93b8;flex:1;cursor:pointer;}
+.af-src{font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(0,229,255,.12);color:#00e5ff;margin-left:4px;}
+.fkey.extra-fan{outline:2px dashed #7ee8a0;outline-offset:-3px;}
+@media (max-width:520px){.af-grid{grid-template-columns:1fr;}}
 .kpi-tabs{display:flex;gap:4px;padding:0 18px;border-bottom:1px solid rgba(255,255,255,.08);}
 .kpi-tab-btn{padding:10px 16px;background:none;border:none;color:#888;font-size:13px;
   font-weight:600;cursor:pointer;border-bottom:2px solid transparent;font-family:'Sarabun',sans-serif;}
@@ -882,6 +899,55 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </div>
 
+<!-- ➕ เพิ่มพัดลมดูดอากาศ ที่หน้างานพบเพิ่ม (ไม่มีในรายการเดิม) -->
+<div class="admin-panel" id="addFanPanel">
+  <div class="admin-box" style="max-width:620px;">
+    <div class="admin-head">
+      <span style="font-size:18px;">➕</span>
+      <span class="admin-title" style="color:#7ee8a0;">เพิ่มพัดลมดูดอากาศ (พบเพิ่มหน้างาน)</span>
+      <button class="admin-close" onclick="closeAddFanPanel()">✕</button>
+    </div>
+    <div class="admin-body">
+      <div class="af-grid">
+        <div class="af-field"><label>หมายเลขเครื่องจักร <b>*</b></label>
+          <input class="add-user-input" id="af-id" placeholder="เช่น 1EF-8/60R" autocomplete="off"></div>
+        <div class="af-field"><label>หมายเลขครุภัณฑ์</label>
+          <input class="add-user-input" id="af-asset" placeholder="เว้นว่าง = ไม่มีหมายเลขครุภัณฑ์" autocomplete="off"></div>
+        <div class="af-field"><label>ชั้น <b>*</b></label>
+          <select class="add-user-input" id="af-floor"><option value="">-- เลือกชั้น --</option></select></div>
+        <div class="af-field"><label>โซน <b>*</b></label>
+          <select class="add-user-input" id="af-zone"><option value="">-- เลือกโซน --</option></select></div>
+        <div class="af-field"><label>รุ่น</label>
+          <input class="add-user-input" id="af-model" list="af-model-list" placeholder="เช่น 160X, 250X, FSA250D" autocomplete="off">
+          <datalist id="af-model-list"></datalist></div>
+        <div class="af-field"><label>สถานะเริ่มต้น</label>
+          <select class="add-user-input" id="af-status">
+            <option value="0">⚪ ยังไม่ตรวจ</option>
+            <option value="1">🟢 ปกติ</option>
+            <option value="2">🔴 ชำรุด</option>
+          </select></div>
+        <div class="af-field af-full"><label>สถานที่ติดตั้ง / ห้อง <b>*</b></label>
+          <input class="add-user-input" id="af-loc" placeholder="เช่น ห้องน้ำชาย (จนท.)" autocomplete="off"></div>
+        <div class="af-field af-full"><label>หน่วยงาน</label>
+          <input class="add-user-input" id="af-dept" list="af-dept-list" placeholder="เช่น Non Trauma" autocomplete="off">
+          <datalist id="af-dept-list"></datalist></div>
+      </div>
+      <div class="af-err" id="af-err"></div>
+      <div class="af-actions">
+        <button class="btn-add-user" onclick="submitAddFan(false)">💾 บันทึก</button>
+        <button class="btn-add-user" style="background:rgba(0,229,255,.12);border-color:rgba(0,229,255,.4);color:#00e5ff;" onclick="submitAddFan(true)">💾 บันทึก + เปิดเครื่องนี้ทำ PM</button>
+      </div>
+      <div class="af-hint">
+        • เครื่องที่เพิ่มจะแสดงในผังชั้น/โซนทันที (กรอบเส้นประสีเขียว) และใช้ฟอร์ม PM ได้เหมือนเครื่องเดิม<br>
+        • ข้อมูลเก็บไว้ในเครื่องนี้ — เมื่อส่งฟอร์ม PM ของเครื่องใหม่แล้ว เครื่องอื่นที่เปิดแอพจะดึงเครื่องนี้มาแสดงจาก Sheet ให้อัตโนมัติ<br>
+        • ต้องการให้ติดอยู่ในไฟล์ถาวร กด <b>💾 บันทึกไฟล์</b> แล้วนำไฟล์ไปทับไฟล์เดิม
+      </div>
+      <div class="af-list-title">รายการพัดลมที่เพิ่มเอง (<span id="af-count">0</span>)</div>
+      <div id="af-list"></div>
+    </div>
+  </div>
+</div>
+
 <!-- แผนการทำ PM (PM Plan) — ไม่แตะ/ไม่กระทบระบบ PM Mode เดิมที่มีอยู่แล้ว -->
 <div class="admin-panel" id="planPanel">
   <div class="admin-box" style="max-width:640px">
@@ -931,7 +997,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
     <div class="logo">EAF MONITOR</div>
     <div>
       <h1>Exhaust Air Fan <span>Dashboard</span></h1>
-      <div style="font-size:11px;color:var(--muted);margin-top:1px;">ระบบติดตามสถานะพัดลมดูดอากาศ · 3,841 เครื่อง</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:1px;">ระบบติดตามสถานะพัดลมดูดอากาศ · <span id="hdrFanCount">3,841</span> เครื่อง</div>
     </div>
   </div>
   <div class="hdr-r" id="hdrRight">
@@ -976,8 +1042,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
   <div class="stat noid"><div class="n" id="s-noid">1836</div><div class="l">🔲 ไม่มีหมายเลขครุภัณฑ์</div></div>
 </div>
 
-<!-- GLOBAL MODEL SUMMARY: สรุปจำนวนพัดลมแต่ละรุ่นรวมทุกชั้น (อยู่ใต้ dashboard สรุปด้านบน) -->
-<div class="global-model-summary" id="globalModelSummary"></div>
+<!-- GLOBAL MODEL SUMMARY: ตัดออกตามคำขอ (ใส่ <div class="global-model-summary" id="globalModelSummary"></div> กลับที่นี่ถ้าต้องการแสดงอีก) -->
 
 <!-- CONTROLS -->
 <div style="display:flex;align-items:center;padding:0 20px 8px;">
@@ -1004,6 +1069,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
   <button class="btn-toggle-pm" style="border-color:rgba(99,179,237,.4);color:rgba(99,179,237,.9);margin-left:6px;" onclick="saveToFile()">💾 บันทึกไฟล์</button>
   <button class="btn-toggle-pm" style="border-color:rgba(255,215,0,.4);color:#ffd700;margin-left:6px;" onclick="openKPIPanel()">📊 KPI</button>
   <button class="btn-toggle-pm" style="border-color:rgba(0,229,255,.4);color:#00e5ff;margin-left:6px;" onclick="openPlanModal()">📅 แผนการทำ PM</button>
+  <button class="btn-toggle-pm" style="border-color:rgba(126,232,160,.5);color:#7ee8a0;margin-left:6px;" onclick="openAddFanPanel()">➕ เพิ่มพัดลม</button>
 </div>
 
 <!-- PM SELECT BAR -->
@@ -13831,6 +13897,30 @@ function floorOrder(fl) {
 function saveOverrides() { try { localStorage.setItem('eaf_st', JSON.stringify(overrides)); } catch(e){} }
 function savePMSet() { try { localStorage.setItem('eaf_pm', JSON.stringify([...pmSet])); } catch(e){} }
 
+// ─── ➕ พัดลมที่เพิ่มเอง (พบเพิ่มหน้างาน) ─────────────────
+// เก็บใน localStorage 'eaf_extra_fans' แล้วต่อท้าย RAW (ต่อท้ายเท่านั้น เพื่อไม่ให้ index ของเครื่องเดิมเลื่อน)
+const EXTRA_KEY = 'eaf_extra_fans', EXTRA_IGNORE_KEY = 'eaf_extra_ignore';
+const BASE_RAW_LEN = RAW.length;
+const extraFanIds = new Set(); // machine id ของเครื่องที่เพิ่มเอง (ยังไม่ได้ฝังในไฟล์)
+function loadExtraFans() { try { const a = JSON.parse(localStorage.getItem(EXTRA_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch(e) { return []; } }
+function saveExtraFans(list) { try { localStorage.setItem(EXTRA_KEY, JSON.stringify(list)); } catch(e){} }
+function loadExtraIgnore() { try { return new Set(JSON.parse(localStorage.getItem(EXTRA_IGNORE_KEY) || '[]')); } catch(e) { return new Set(); } }
+function saveExtraIgnore(s) { try { localStorage.setItem(EXTRA_IGNORE_KEY, JSON.stringify([...s])); } catch(e){} }
+function fanIdKey(id) { return String(id || '').trim().toUpperCase(); }
+function findFanIdx(id) { const k = fanIdKey(id); return RAW.findIndex(r => fanIdKey(r[0]) === k); }
+(function mergeExtraFans() {
+  const list = loadExtraFans();
+  const keep = [];
+  list.forEach(f => {
+    if (!f || !f.id || !f.floor || !f.zone) return;
+    if (findFanIdx(f.id) !== -1) return; // ฝังอยู่ในไฟล์แล้ว (กด 💾 บันทึกไฟล์) → ไม่ต้องเพิ่มซ้ำ
+    RAW.push([f.id, f.asset || 'ไม่มีหมายเลขครุภัณฑ์', Number(f.status) || 0, f.model || '', f.loc || '', f.zone, f.floor, f.dept || '']);
+    extraFanIds.add(fanIdKey(f.id));
+    keep.push(f);
+  });
+  if (keep.length !== list.length) saveExtraFans(keep);
+})();
+
 // ─── BUILD INDEXES ───────────────────────────────────────
 const byFloorZone = {}; // floor -> zone -> [idx]
 const allFloors = new Set();
@@ -13864,6 +13954,138 @@ Object.values(byFloorZone).forEach(zones => {
     });
   });
 });
+
+// ─── ➕ เพิ่มพัดลม: ฟังก์ชันเพิ่มเข้า index ตอนใช้งาน ─────
+function normFloor(v) { return String(v || '').replace(/^ชั้น\s*/, '').trim().toUpperCase(); }
+function normZone(v)  { return String(v || '').replace(/^โซน\s*/, '').trim().toUpperCase(); }
+function addSelectOption(selId, value, label) {
+  const sel = document.getElementById(selId);
+  if (!sel || [...sel.options].some(o => o.value === value)) return;
+  const o = document.createElement('option'); o.value = value; o.textContent = label; sel.appendChild(o);
+}
+// เพิ่มเครื่องเข้า RAW + index โดยไม่ต้องรีโหลดหน้า → คืนค่า index ใหม่
+function addFanRuntime(f) {
+  const i = RAW.length;
+  RAW.push([f.id, f.asset || 'ไม่มีหมายเลขครุภัณฑ์', Number(f.status) || 0, f.model || '', f.loc || '', f.zone, f.floor, f.dept || '']);
+  extraFanIds.add(fanIdKey(f.id));
+  const fl = f.floor, zn = f.zone;
+  if (!allFloors.has(fl)) {
+    allFloors.add(fl); floorsSorted.push(fl); floorsSorted.sort((a,b) => floorOrder(a)-floorOrder(b));
+    addSelectOption('floorSel', fl, `ชั้น ${fl}`); addSelectOption('pmFloor', fl, `ชั้น ${fl}`);
+  }
+  if (!allZones.has(zn)) {
+    allZones.add(zn); zonesSorted.push(zn); zonesSorted.sort();
+    addSelectOption('zoneSel', zn, `โซน ${zn}`); addSelectOption('pmZone', zn, `โซน ${zn}`);
+  }
+  if (!byFloorZone[fl]) byFloorZone[fl] = {};
+  if (!byFloorZone[fl][zn]) byFloorZone[fl][zn] = [];
+  const arr = byFloorZone[fl][zn];
+  arr.push(i);
+  arr.sort((a, b) => { const ka = machineIdOrder(RAW[a][0]), kb = machineIdOrder(RAW[b][0]); return ka < kb ? -1 : ka > kb ? 1 : 0; });
+  return i;
+}
+
+function openAddFanPanel() {
+  const floors = (typeof FLOORS_LIST !== 'undefined' ? FLOORS_LIST : []).concat(floorsSorted);
+  const fsel = document.getElementById('af-floor');
+  [...new Set(floors)].sort((a,b) => floorOrder(a)-floorOrder(b)).forEach(fl => addSelectOption('af-floor', fl, `ชั้น ${fl}`));
+  const zones = (typeof ZONES_LIST !== 'undefined' ? ZONES_LIST : []).concat(zonesSorted);
+  [...new Set(zones)].forEach(zn => addSelectOption('af-zone', zn, `โซน ${zn}`));
+  // ตั้งค่าเริ่มต้นตามชั้น/โซนที่กรองอยู่ หรือที่กำลังทำ PM
+  if (!fsel.value) fsel.value = (pmActive && pmFloor) || filter.floor || '';
+  const zsel = document.getElementById('af-zone');
+  if (!zsel.value) zsel.value = (pmActive && pmZone) || filter.zone || '';
+  const models = [...new Set(RAW.map(r => (r[3] || '').trim()).filter(Boolean))].sort();
+  document.getElementById('af-model-list').innerHTML = models.map(m => `<option value="${escAF(m)}">`).join('');
+  const depts = [...new Set(RAW.map(r => (r[7] || '').trim()).filter(Boolean))].sort();
+  document.getElementById('af-dept-list').innerHTML = depts.map(d => `<option value="${escAF(d)}">`).join('');
+  document.getElementById('af-err').textContent = '';
+  renderAddFanList();
+  document.getElementById('addFanPanel').classList.add('show');
+  setTimeout(() => document.getElementById('af-id').focus(), 50);
+}
+function closeAddFanPanel() { document.getElementById('addFanPanel').classList.remove('show'); }
+function escAF(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function submitAddFan(openAfter) {
+  const v = id => document.getElementById(id).value.trim();
+  const err = document.getElementById('af-err');
+  const f = {
+    id: v('af-id').toUpperCase().replace(/\s+/g, ''), asset: v('af-asset'), floor: normFloor(v('af-floor')), zone: normZone(v('af-zone')),
+    model: v('af-model').toUpperCase(), status: Number(v('af-status')) || 0, loc: v('af-loc'), dept: v('af-dept'),
+    by: (typeof currentUser !== 'undefined' && currentUser && (currentUser.name || currentUser.username)) || '', added: new Date().toISOString(), src: 'manual'
+  };
+  if (!f.id)    { err.textContent = '⚠️ กรุณากรอกหมายเลขเครื่องจักร'; return; }
+  if (!f.floor) { err.textContent = '⚠️ กรุณาเลือกชั้น'; return; }
+  if (!f.zone)  { err.textContent = '⚠️ กรุณาเลือกโซน'; return; }
+  if (!f.loc)   { err.textContent = '⚠️ กรุณากรอกสถานที่ติดตั้ง'; return; }
+  const dup = findFanIdx(f.id);
+  if (dup !== -1) { err.innerHTML = `⚠️ มีหมายเลข <b>${escAF(RAW[dup][0])}</b> อยู่แล้ว (ชั้น ${escAF(RAW[dup][6])} โซน ${escAF(RAW[dup][5])} · ${escAF(RAW[dup][4])})`; return; }
+  const list = loadExtraFans(); list.push(f); saveExtraFans(list);
+  const ign = loadExtraIgnore(); if (ign.delete(fanIdKey(f.id))) saveExtraIgnore(ign);
+  const i = addFanRuntime(f);
+  ['af-id','af-asset','af-model','af-loc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('af-status').value = '0';
+  err.textContent = '';
+  if (pmActive && f.floor === pmFloor && f.zone === pmZone) { pmSet.add(i); savePMSet(); }
+  render();
+  renderAddFanList();
+  showToast(`➕ เพิ่มพัดลม ${f.id} (ชั้น ${f.floor} โซน ${f.zone}) แล้ว`);
+  if (openAfter) { closeAddFanPanel(); openModal(i); }
+}
+
+function renderAddFanList() {
+  const idxs = [];
+  RAW.forEach((r, i) => { if (i >= BASE_RAW_LEN && extraFanIds.has(fanIdKey(r[0]))) idxs.push(i); });
+  const src = {}; loadExtraFans().forEach(f => src[fanIdKey(f.id)] = f.src);
+  document.getElementById('af-count').textContent = idxs.length;
+  document.getElementById('af-list').innerHTML = idxs.length ? idxs.map(i => {
+    const r = RAW[i];
+    const tag = src[fanIdKey(r[0])] === 'sheet' ? '<span class="af-src">จาก Sheet</span>' : '';
+    return `<div class="af-row">
+      <div class="af-row-id" onclick="closeAddFanPanel();openModal(${i})">${escAF(r[0])}${tag}</div>
+      <div class="af-row-info" onclick="closeAddFanPanel();openModal(${i})">ชั้น ${escAF(r[6])} · โซน ${escAF(r[5])} · ${escAF(r[4] || '-')} · ${escAF(r[3] || 'ไม่ระบุรุ่น')}</div>
+      <button class="btn-del-user" onclick="deleteExtraFan(${i})">ลบ</button>
+    </div>`;
+  }).join('') : '<div style="color:#8a93b8;font-size:12px;padding:6px;">ยังไม่มีเครื่องที่เพิ่มเอง</div>';
+}
+
+function deleteExtraFan(i) {
+  const r = RAW[i];
+  if (!r || i < BASE_RAW_LEN) return;
+  if (!confirm(`ลบพัดลม ${r[0]} ออกจากรายการที่เพิ่มเอง?`)) return;
+  const key = fanIdKey(r[0]);
+  saveExtraFans(loadExtraFans().filter(f => fanIdKey(f.id) !== key));
+  const ign = loadExtraIgnore(); ign.add(key); saveExtraIgnore(ign); // กันไม่ให้ดึงกลับมาจาก Sheet อีก
+  // index ของเครื่องที่เพิ่มหลังจากนี้จะเลื่อนลง 1 → ย้ายสถานะ/PM ตามไปด้วย
+  const newOv = {};
+  Object.keys(overrides).forEach(k => { const n = Number(k); if (n === i) return; newOv[n > i ? n - 1 : n] = overrides[k]; });
+  Object.keys(overrides).forEach(k => delete overrides[k]); Object.assign(overrides, newOv); saveOverrides();
+  const newPm = [...pmSet].filter(n => n !== i).map(n => n > i ? n - 1 : n);
+  pmSet.clear(); newPm.forEach(n => pmSet.add(n)); savePMSet();
+  showToast(`🗑️ ลบ ${r[0]} แล้ว — กำลังรีโหลด...`);
+  setTimeout(() => location.reload(), 600);
+}
+
+// ดึงเครื่องที่ไม่มีในรายการ แต่มีบันทึก PM ใน Sheet (เครื่องที่ทีมอื่นเพิ่มไว้) → เพิ่มให้อัตโนมัติ
+function importExtraFansFromLogs(statusMap) {
+  const ign = loadExtraIgnore();
+  const validFloors = new Set((typeof FLOORS_LIST !== 'undefined' ? FLOORS_LIST : []).concat(floorsSorted));
+  const validZones = new Set((typeof ZONES_LIST !== 'undefined' ? ZONES_LIST : []).concat(zonesSorted));
+  const list = loadExtraFans();
+  let added = 0;
+  Object.keys(statusMap).forEach(mid => {
+    const s = statusMap[mid];
+    const key = fanIdKey(mid);
+    if (!key || ign.has(key) || findFanIdx(mid) !== -1) return;
+    const fl = normFloor(s.floor), zn = normZone(s.zone);
+    if (!validFloors.has(fl) || !validZones.has(zn)) return;
+    const f = { id: String(mid).trim(), asset: (s.asset || '').trim(), floor: fl, zone: zn, model: normalizeModel(s.model) || '',
+      status: 0, loc: (s.location || '').trim(), dept: '', added: new Date().toISOString(), src: 'sheet' };
+    list.push(f); addFanRuntime(f); added++;
+  });
+  if (added) { saveExtraFans(list); showToast(`➕ พบพัดลมที่เพิ่มใหม่จาก Sheet ${added} เครื่อง`); }
+}
 
 // ─── INIT ─────────────────────────────────────────────────
 window.onload = () => {
@@ -14006,7 +14228,8 @@ function render() {
       const keys = filtered.map(i => {
         const st = getDisplayStatus(i);
         const ring = getModelRingClass(RAW[i][3]);
-        return `<button class="fkey ${st} ${ring}" data-mid="${RAW[i][0]}" onclick="openModal(${i})" title="${RAW[i][4]} | ${RAW[i][3]}">
+        const xf = i >= BASE_RAW_LEN ? ' extra-fan' : '';
+        return `<button class="fkey ${st} ${ring}${xf}" data-mid="${RAW[i][0]}" onclick="openModal(${i})" title="${RAW[i][4]} | ${RAW[i][3]}">
           <div class="kid">${RAW[i][0]}</div>
           <div class="kdot"></div>
         </button>`;
@@ -14106,6 +14329,7 @@ function updateStats() {
     else un++;
   });
   document.getElementById('s-total').textContent = RAW.length;
+  const hfc = document.getElementById('hdrFanCount'); if (hfc) hfc.textContent = RAW.length.toLocaleString('en-US');
   document.getElementById('s-ok').textContent = ok;
   document.getElementById('s-br').textContent = br;
   document.getElementById('s-pm').textContent = pm;
@@ -15380,9 +15604,11 @@ async function loadStatusFromSheet() {
       if (!mid) return;
       // เก็บแถวล่าสุดของแต่ละ machine_id
       if (!statusMap[mid] || log.date >= statusMap[mid].date) {
-        statusMap[mid] = { status: log.status, date: log.date, asset: log.asset_no, model: log.model };
+        statusMap[mid] = { status: log.status, date: log.date, asset: log.asset_no, model: log.model,
+          floor: log.floor, zone: log.zone, location: log.location };
       }
     });
+    try { importExtraFansFromLogs(statusMap); } catch(e) { console.warn('importExtraFansFromLogs:', e.message); }
 
     // Map status label → internal key
     function labelToKey(st) {
