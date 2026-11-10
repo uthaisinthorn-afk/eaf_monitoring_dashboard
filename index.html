@@ -15588,7 +15588,7 @@ function jobTrackReport(o) {
     .then(() => setTimeout(() => showToast('📨 ส่งเรื่องเข้าระบบติดตามงานแล้ว (รอหัวหน้าช่างรับเรื่อง)'), 2600))
     .catch(e => console.warn('job tracking report failed:', e.message));
 }
-function jobTrackLoc(floor, zone, loc) { return 'ชั้น ' + (floor || '-') + (zone ? ' โซน ' + zone : '') + ' · ' + (loc || '-'); }
+function jobTrackLoc(floor, zone, loc) { const s = v => String(v || '').replace(/^\s*(ชั้น|โซน)\s*/, ''); floor = s(floor); zone = s(zone); return 'ชั้น ' + (floor || '-') + (zone ? ' โซน ' + zone : '') + ' · ' + (loc || '-'); }
 
 // โหลดสถานะจาก Sheet แล้ว merge เข้า overrides + pmSet
 async function loadStatusFromSheet() {
