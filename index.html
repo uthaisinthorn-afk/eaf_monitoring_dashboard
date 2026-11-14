@@ -15063,9 +15063,44 @@ function pmPhotoGallery(idx) {
   const fi = document.getElementById('pm-gal-' + idx);
   fi.value = ''; fi.click();
 }
+// รูปประจำเครื่อง: เปิดฟอร์มแล้วดึงรูปล่าสุดที่เคยบันทึกมาแสดงให้ (เหมือนข้อมูลสายพาน/ครุภัณฑ์)
+// pmPhotoSaved[idx] = {url,date} ถ้าช่องนั้นใช้รูปเดิม · ถ่าย/อัปโหลดใหม่ = แทนที่รูปเดิม
+const pmPhotoSaved = [null, null, null];
+function pmMarkSaved() {
+  pmPhotoSaved.forEach((s, idx) => {
+    const slot = document.getElementById('slot-' + idx); if (!slot) return;
+    let tag = slot.querySelector('.pm-saved-tag');
+    if (!s) { if (tag) tag.remove(); return; }
+    if (!tag) {
+      tag = document.createElement('div'); tag.className = 'pm-saved-tag';
+      tag.style.cssText = 'font-size:11.5px;color:#7dd3fc;padding:0 12px 10px;line-height:1.4';
+      slot.appendChild(tag);
+    }
+    tag.textContent = '🗂 รูปเดิมที่บันทึกไว้' + (s.date ? ' (' + s.date + ')' : '') + ' — ถ่าย/อัปโหลดใหม่เพื่อแทนที่';
+  });
+}
+async function pmLoadSavedPhotos(machineId) {
+  if (!machineId || !GS_PM) return;
+  pmPhotoStatus('⏳ กำลังโหลดรูปเดิมของเครื่องนี้...', 'uploading');
+  try {
+    const res = await fetch(GS_PM + '?action=getMachinePhotos&id=' + encodeURIComponent(machineId) + '&t=' + Date.now(), { cache: 'no-store' });
+    const j = await res.json();
+    if (document.getElementById('pm-machineid').value !== machineId) return;   // เปลี่ยนเครื่องไปแล้ว
+    let n = 0;
+    (j.photos || []).forEach((p, idx) => {
+      if (!p || !p.data || pmPhotos[idx]) return;   // ถ่ายใหม่ไปก่อนแล้ว → ไม่ทับ
+      pmPhotos[idx] = p.data; pmPhotoSaved[idx] = { url: p.url, date: p.date || '' }; n++;
+      const preview = document.getElementById('preview-' + idx); if (preview) preview.src = p.data;
+      const slot = document.getElementById('slot-' + idx); if (slot) slot.classList.add('has-img');
+    });
+    pmMarkSaved();
+    pmPhotoStatus(n ? '🗂 ใช้รูปเดิม ' + n + ' รูป (ถ่ายใหม่ได้ถ้ามีการเปลี่ยน/ปรับปรุง)' : '', n ? 'done' : '');
+  } catch (e) { pmPhotoStatus(''); console.warn('load saved photos:', e.message); }
+}
 function pmPhotoClear(e, idx) {
   if (e) e.stopPropagation();
   pmPhotos[idx] = null;
+  pmPhotoSaved[idx] = null; pmMarkSaved();
   const preview = document.getElementById('preview-' + idx);
   if (preview) { preview.src = ''; }
   const slot = document.getElementById('slot-' + idx);
@@ -15097,6 +15132,7 @@ function pmPhotoSelected(idx, input) {
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
       const b64 = canvas.toDataURL('image/jpeg', PHOTO_QUALITY);
       pmPhotos[idx] = b64;
+      pmPhotoSaved[idx] = null; pmMarkSaved();   // รูปใหม่แทนที่รูปเดิม
       const preview = document.getElementById('preview-' + idx);
       if (preview) preview.src = b64;
       const slot = document.getElementById('slot-' + idx);
@@ -15583,7 +15619,8 @@ function jobTrackReport(o) {
   if (!JOB_TRACKING_URL || !o || !o.id) return;
   const body = { action: 'reportFromPM', key: JOB_TRACKING_KEY, system: JOB_TRACK_SYSTEM, source: o.source || 'ฟอร์ม PM',
     machine_id: o.id, type: JOB_TRACK_TYPE, location: o.location || '', detail: o.detail || '', reporter: o.reporter || '-',
-    status_label: o.label || '', photos: (o.photos || []).filter(p => typeof p === 'string' && p).slice(0, 3) };
+    status_label: o.label || '', photos: (o.photos || []).filter(p => typeof p === 'string' && p).slice(0, 3),
+    asset_no: o.asset || ((RAW.find(r => String(r[0]).trim() === String(o.id).trim()) || [])[1] || '') };
   fetch(JOB_TRACKING_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
     .then(() => setTimeout(() => showToast('📨 ส่งเรื่องเข้าระบบติดตามงานแล้ว (รอหัวหน้าช่างรับเรื่อง)'), 2600))
     .catch(e => console.warn('job tracking report failed:', e.message));
@@ -15770,6 +15807,8 @@ function openPMForm() {
   const qb = document.getElementById('pm-quickprint-btn'); if(qb) qb.style.display = 'none';
   document.getElementById('pm-note').value = '';
   pmPhotosReset();
+  pmPhotoSaved.fill(null); pmMarkSaved();
+  pmLoadSavedPhotos(document.getElementById('pm-machineid').value);
   pmPhotoSectionVisible('ok'); // default ok
   document.getElementById('pm-success-banner').classList.remove('show');
   document.getElementById('pm-submit-btn').textContent = '📤 ส่งแบบฟอร์ม PM';
@@ -16023,9 +16062,13 @@ async function pmDoSubmit() {
     work_status:  pmStatus,
     status_label: stMap[pmStatus] || pmStatus,
     remark:       document.getElementById('pm-note').value,
-    photo_machine: pmPhotos[0] || '',
-    photo_asset:   pmPhotos[1] || '',
-    photo_location:pmPhotos[2] || ''
+    // ใช้รูปเดิม = ส่งลิงก์เดิม (ไม่อัปโหลดซ้ำ) · รูปใหม่ = ส่งไฟล์รูป
+    photo_machine: pmPhotoSaved[0] ? '' : (pmPhotos[0] || ''),
+    photo_asset:   pmPhotoSaved[1] ? '' : (pmPhotos[1] || ''),
+    photo_location:pmPhotoSaved[2] ? '' : (pmPhotos[2] || ''),
+    photo_machine_url:  pmPhotoSaved[0] ? pmPhotoSaved[0].url : '',
+    photo_asset_url:    pmPhotoSaved[1] ? pmPhotoSaved[1].url : '',
+    photo_location_url: pmPhotoSaved[2] ? pmPhotoSaved[2].url : ''
   };
 
   if (['broken', 'order'].includes(payload.work_status)) {
@@ -16034,7 +16077,7 @@ async function pmDoSubmit() {
       location: jobTrackLoc(payload.floor, payload.zone, payload.location),
       detail: ['ระบบ: พัดลมดูดอากาศ (EAF)', 'ผลตรวจ PM วันที่ ' + payload.date + ' — ' + payload.status_label,
         payload.remark ? 'หมายเหตุ: ' + payload.remark : '', payload.machine_no ? 'รุ่น: ' + payload.machine_no : ''].filter(Boolean).join('\n'),
-      photos: [payload.photo_machine, payload.photo_location, payload.photo_asset]
+      photos: [pmPhotos[0] || '', pmPhotos[2] || '', pmPhotos[1] || '']
     });
   }
 
